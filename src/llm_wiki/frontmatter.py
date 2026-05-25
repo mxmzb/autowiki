@@ -70,6 +70,11 @@ def validate(fm: PageFrontmatter) -> list[str]:
         errors.append(f"invalid status: {fm.status}")
     if fm.tier not in TIERS:
         errors.append(f"invalid tier: {fm.tier}")
-    if fm.confidence is not None and not (0.0 <= float(fm.confidence) <= 1.0):
-        errors.append("confidence must be between 0 and 1")
+    if fm.confidence is not None:
+        try:
+            in_range = 0.0 <= float(fm.confidence) <= 1.0
+        except (TypeError, ValueError):
+            in_range = False
+        if not in_range:
+            errors.append("confidence must be a number between 0 and 1")
     return errors

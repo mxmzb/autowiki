@@ -54,3 +54,12 @@ def test_validate_clean_page_has_no_errors():
 
 def test_page_types_constant():
     assert "source-summary" in PAGE_TYPES and "note" in PAGE_TYPES
+
+
+def test_validate_flags_non_numeric_confidence_without_crashing():
+    # A hand-edited page may put a non-numeric value in confidence; validate must
+    # report it, not raise (validate backs lint and must never crash on bad input).
+    fm = PageFrontmatter(title="X", type="note", created=today(), updated=today())
+    fm.confidence = "high"  # type: ignore[assignment]
+    errors = validate(fm)
+    assert any("confidence" in e for e in errors)
