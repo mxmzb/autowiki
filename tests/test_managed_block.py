@@ -41,3 +41,12 @@ def test_upsert_replaces_old_block(tmp_path: Path):
     text = f.read_text()
     assert text.count(BEGIN) == 1
     assert "docs/SCHEMA.md" in text
+
+
+def test_render_block_root_mode_has_no_wiki_prefix_or_double_slash():
+    # Root mode (wiki_rel="") places the wiki at the repo root: refs must be
+    # bare (e.g. @SCHEMA.md), with no "wiki/" prefix and no "//" artifacts.
+    block = render_block("claude", "")
+    assert "@SCHEMA.md" in block
+    assert "wiki/" not in block
+    assert "//" not in block
