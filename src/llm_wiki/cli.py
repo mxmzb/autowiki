@@ -31,7 +31,11 @@ def init(
     path: Path = typer.Argument(Path("."), help="Project directory to initialize."),
     target: str = typer.Option("auto", help="auto|claude|generic"),
     root: bool = typer.Option(False, "--root", help="Place the wiki at the project root."),
-    force: bool = typer.Option(False, "--force", help="Re-scaffold over an existing wiki."),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Refresh templates/config over an existing wiki (never overwrites index.md, log.md, pages, or inbox).",
+    ),
     yes: bool = typer.Option(False, "--yes", help="Non-interactive."),
 ) -> None:
     """Initialize an LLM wiki in PATH (new or existing project)."""

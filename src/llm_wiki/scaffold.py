@@ -41,6 +41,8 @@ def init_wiki(
     existed = (wiki_root / cfgmod.CONFIG_NAME).exists()
 
     if existed and not force:
+        # Idempotent re-init: refresh only the managed block, keeping the wiki's
+        # originally-chosen target (a re-init does not switch claude <-> generic).
         cfg = cfgmod.load_config(wiki_root)
         _write_managed_block(project_root, cfg, root_mode)
         return cfg, "updated"
