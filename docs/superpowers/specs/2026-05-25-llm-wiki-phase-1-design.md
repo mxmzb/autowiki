@@ -177,7 +177,7 @@ failures so agents/CI can branch.
 
 | Command | Signature | Behavior |
 |---|---|---|
-| `init` | `init [PATH] [--target claude\|generic\|auto] [--root] [--hooks]` | Scaffold the tree, seed `index.md`/`log.md`, write `SCHEMA.md` + config, inject managed block, write slash commands (claude), optionally install hooks. Idempotent: re-run updates only the managed block; warns if `wiki/` exists. |
+| `init` | `init [PATH] [--target claude\|generic\|auto] [--root] [--hooks] [--force]` | Scaffold the tree, seed `index.md`/`log.md`, write `SCHEMA.md` + config, inject managed block, write slash commands (claude), optionally install hooks. Idempotent: re-run updates only the managed block; warns if `wiki/` exists (use `upgrade`). `--force` re-scaffolds over an existing `wiki/` (recreates seed/template files; still never deletes `pages/`/`inbox/` content). |
 | `add-source` | `add-source <path\|url> [--title T] [--id ID]` | Vendor the raw source into `wiki/inbox/` (copy file / fetch URL), assign a source id, print it. Deterministic half of ingest. Skips if already present. |
 | `new-page` | `new-page --type T --title "…" [--summary S] [--tags a,b] [--sources id…] [--slug S]` | Create `wiki/pages/<slug>.md` with full frontmatter (defaults filled, `created`/`updated` set) + per-type body template. Enforces unique slug. Prints path. Agent writes the prose. |
 | `index` | `index [--check]` | Regenerate `index.md` from all pages' frontmatter, organized by type/category. `--check` verifies current (non-zero if stale). |
@@ -210,7 +210,8 @@ The *semantic* contradiction pass is Phase 5.
 `embed` (Phase 3 vector indexing, distinct from `index`/the catalog), `similar` (Phase 3 semantic
 near-duplicate detection), `graph` (Phase 2 traversal queries).
 
-Global flags: `--wiki <dir>`, `--yes` (non-interactive), `--quiet`.
+Global flags: `--wiki <dir>`, `--yes` (non-interactive; with no `--target`, defaults to `claude` if
+`.claude/` exists else `generic`), `--quiet`. `--force` gates the few overwrite paths (currently `init`).
 
 ---
 
