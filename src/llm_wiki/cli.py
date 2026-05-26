@@ -20,6 +20,7 @@ from .pages import new_page
 from .scaffold import init_wiki, project_root_of, resolve_target
 from .search import search as search_pages
 from .sources import add_source
+from .upgrade import upgrade as upgrade_wiki
 
 app = typer.Typer(
     help="Initialize and maintain Karpathy-style LLM wikis.",
@@ -257,6 +258,21 @@ def status_cmd(
     if s["last_log"]:
         typer.echo(f"Last log: {s['last_log']}")
     typer.echo(f"Lint: {s['lint_errors']} error(s), {s['lint_warnings']} warning(s)")
+
+
+@app.command("upgrade")
+def upgrade_cmd(
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Refresh SCHEMA/commands/managed-block/hooks to the installed version (content untouched)."""
+    cfg = _resolve_cfg(wiki)
+    result = upgrade_wiki(cfg)
+    extras = ", hooks" if result["hooks_refreshed"] else ""
+    typer.echo(
+        f"Upgraded to schema v{SCHEMA_VERSION}: refreshed SCHEMA.md, "
+        f"{result['commands']} command(s), managed block{extras}; "
+        f"migrated {result['pages_migrated']} page(s)."
+    )
 
 
 def main() -> None:
