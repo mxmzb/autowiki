@@ -59,12 +59,14 @@ def dump(fm: PageFrontmatter, body: str) -> str:
     return f"{FM_DELIM}\n{fm_yaml}\n{FM_DELIM}\n\n{body.rstrip()}\n"
 
 
-def validate(fm: PageFrontmatter) -> list[str]:
+def validate(
+    fm: PageFrontmatter, allowed_types: tuple[str, ...] = PAGE_TYPES
+) -> list[str]:
     errors: list[str] = []
     for req in ("title", "type", "created", "updated"):
         if not getattr(fm, req):
             errors.append(f"missing required field: {req}")
-    if fm.type and fm.type not in PAGE_TYPES:
+    if fm.type and fm.type not in allowed_types:
         errors.append(f"unknown type: {fm.type}")
     if fm.status not in STATUSES:
         errors.append(f"invalid status: {fm.status}")

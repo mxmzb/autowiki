@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from .frontmatter import PAGE_TYPES
 
 CONFIG_NAME = ".llm-wiki.toml"
 SCHEMA_VERSION = 1
@@ -15,6 +17,12 @@ class WikiConfig:
     target: str = "claude"  # "claude" | "generic"
     embedding_provider: str = "local"
     stale_days: int = 365
+    extra_types: list[str] = field(default_factory=list)
+
+    @property
+    def allowed_types(self) -> tuple[str, ...]:
+        """Built-in page types plus any user-defined extra_types."""
+        return tuple(PAGE_TYPES) + tuple(self.extra_types)
 
     @property
     def pages_dir(self) -> Path:
@@ -62,16 +70,19 @@ def load_config(root: Path) -> WikiConfig:
         target=wiki.get("target", "claude"),
         embedding_provider=wiki.get("embedding_provider", "local"),
         stale_days=wiki.get("stale_days", 365),
+        extra_types=list(wiki.get("extra_types", [])),
     )
 
 
 def dump_config(cfg: WikiConfig) -> str:
+    extra = ", ".join(f'"{t}"' for t in cfg.extra_types)
     return (
         "[wiki]\n"
         f"schema_version = {cfg.schema_version}\n"
         f'target = "{cfg.target}"\n'
         f'embedding_provider = "{cfg.embedding_provider}"\n'
         f"stale_days = {cfg.stale_days}\n"
+        f"extra_types = [{extra}]\n"
     )
 
 

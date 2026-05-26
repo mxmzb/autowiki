@@ -38,3 +38,21 @@ def test_config_path_helpers(tmp_path: Path):
     assert cfg.inbox_dir.name == "inbox"
     assert cfg.index_file.name == "index.md"
     assert cfg.log_file.name == "log.md"
+
+
+def test_extra_types_round_trip_and_allowed_types(tmp_path: Path):
+    wiki = tmp_path / "wiki"
+    wiki.mkdir()
+    cfg = WikiConfig(root=wiki, extra_types=["recipe", "meeting"])
+    write_config(cfg)
+    loaded = load_config(wiki)
+    assert loaded.extra_types == ["recipe", "meeting"]
+    # allowed_types = built-in PAGE_TYPES plus the custom ones
+    assert "entity" in loaded.allowed_types
+    assert "recipe" in loaded.allowed_types and "meeting" in loaded.allowed_types
+
+
+def test_extra_types_defaults_empty(tmp_path: Path):
+    cfg = WikiConfig(root=tmp_path / "wiki")
+    assert cfg.extra_types == []
+    assert "recipe" not in cfg.allowed_types

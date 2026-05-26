@@ -63,3 +63,11 @@ def test_validate_flags_non_numeric_confidence_without_crashing():
     fm.confidence = "high"  # type: ignore[assignment]
     errors = validate(fm)
     assert any("confidence" in e for e in errors)
+
+
+def test_validate_accepts_custom_type_via_allowed_types():
+    fm = PageFrontmatter(title="X", type="recipe", created=today(), updated=today())
+    # Default rejects an unknown type...
+    assert any("recipe" in e for e in validate(fm))
+    # ...but passing allowed_types accepts it.
+    assert validate(fm, allowed_types=(*PAGE_TYPES, "recipe")) == []
