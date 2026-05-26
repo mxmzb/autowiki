@@ -57,6 +57,12 @@ typed `relations`. The graph is computed on demand — query it with:
 - `llm-wiki graph stats` / `llm-wiki graph export --format dot|json`.
 Strengthen the graph during ingest by adding `relations` entries and `[[links]]` between related pages.
 
+## Semantic search
+If the embeddings extra is installed (`pip install 'llm-wiki[embeddings]'`), run `llm-wiki embed` to
+(re)build the vector index; then `llm-wiki search` automatically fuses keyword + semantic results.
+Use `llm-wiki similar <slug>` to find near-duplicate pages **before** creating a new one. Without the
+extra, search is keyword-only — everything still works.
+
 ## Customizing your wiki
 This file is yours to edit. To adapt the wiki to your use case:
 - **Add a page type:** describe it here under "Page types", add it to `[wiki].extra_types` in

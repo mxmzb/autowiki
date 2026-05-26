@@ -10,7 +10,9 @@ import typer
 from . import __version__
 from .catalog import index_is_current, write_index
 from .config import SCHEMA_VERSION, WikiConfig, find_wiki_root, load_config
+from . import embeddings
 from . import graph as graphlib
+from . import vectorindex
 from .doctor import doctor as doctor_check
 from .doctor import status as status_report
 from .hooks import install_hooks, run_hook, uninstall_hooks
@@ -162,11 +164,16 @@ def search_cmd(
     tag: str = typer.Option(None, "--tag"),
     limit: int = typer.Option(10, "--limit"),
     json_out: bool = typer.Option(False, "--json"),
+    hybrid: bool = typer.Option(
+        None, "--hybrid/--no-hybrid", help="Fuse keyword + semantic (default: auto when available)."
+    ),
     wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
 ) -> None:
-    """Search the wiki (BM25 over title, summary, tags, and body)."""
+    """Search the wiki (BM25, fused with vector retrieval when available)."""
     cfg = _resolve_cfg(wiki)
-    hits = search_pages(cfg, query, type=page_type, tag=tag, limit=limit)
+    if hybrid and not (embeddings.available(cfg) and vectorindex.load(cfg) is not None):
+        typer.echo("Hybrid requested but no embeddings/index; using keyword search.", err=True)
+    hits = search_pages(cfg, query, type=page_type, tag=tag, limit=limit, hybrid=hybrid)
     if json_out:
         typer.echo(json.dumps([asdict(h) for h in hits]))
         return
@@ -370,6 +377,55 @@ def graph_export_cmd(
     except ValueError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1)
+
+
+@app.command("embed")
+def embed_cmd(
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Build/update the vector index (requires the embeddings extra)."""
+    cfg = _resolve_cfg(wiki)
+    backend = embeddings.get_backend(cfg)
+    if backend is None:
+        typer.echo(
+            "Embeddings backend unavailable. Install with: pip install 'llm-wiki[embeddings]'",
+            err=True,
+        )
+        raise typer.Exit(1)
+    s = vectorindex.build_or_update(cfg, backend)
+    typer.echo(
+        f"Embedded with {backend.name}: +{s['added']} added, {s['updated']} updated, "
+        f"{s['removed']} removed, {s['unchanged']} unchanged."
+    )
+
+
+@app.command("similar")
+def similar_cmd(
+    slug: str = typer.Argument(..., help="Page slug."),
+    limit: int = typer.Option(10, "--limit"),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Find pages most similar to SLUG (vector nearest neighbors)."""
+    cfg = _resolve_cfg(wiki)
+    if not embeddings.available(cfg) or vectorindex.load(cfg) is None:
+        typer.echo(
+            "No vector index. Install 'llm-wiki[embeddings]' and run `llm-wiki embed`.", err=True
+        )
+        raise typer.Exit(1)
+    try:
+        results = vectorindex.similar(cfg, slug, limit=limit)
+    except KeyError:
+        typer.echo(f"page not in index: {slug} (run `llm-wiki embed`)", err=True)
+        raise typer.Exit(1)
+    if json_out:
+        typer.echo(json.dumps([{"slug": s, "score": sc} for s, sc in results]))
+        return
+    if not results:
+        typer.echo("No similar pages.")
+        return
+    for s, sc in results:
+        typer.echo(f"{sc:.3f}  {s}")
 
 
 def main() -> None:

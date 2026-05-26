@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from . import embeddings, vectorindex
 from .config import SCHEMA_VERSION, WikiConfig
 from .hooks import hooks_installed
 from .lint import run_lint
@@ -40,7 +41,19 @@ def doctor(cfg: WikiConfig) -> list[tuple[str, str]]:
         out.append(("warn", f"managed block missing from {block_file.name}; run `llm-wiki upgrade`"))
 
     out.append(("ok", f"hooks {'installed' if hooks_installed(project_root) else 'not installed'}"))
-    out.append(("ok", f"embedding provider: {cfg.embedding_provider} (vector search lands in Phase 3)"))
+
+    if not embeddings.available(cfg):
+        out.append(("ok", "embeddings: not installed (keyword search only) — `pip install llm-wiki[embeddings]`"))
+    else:
+        loaded = vectorindex.load(cfg)
+        if loaded is None:
+            out.append(("warn", f"embeddings available ({cfg.embedding_provider}); no index — run `llm-wiki embed`"))
+        else:
+            indexed, page_count = len(loaded[0]), len(list_page_paths(cfg))
+            if indexed != page_count:
+                out.append(("warn", f"vector index stale ({indexed} indexed vs {page_count} pages); run `llm-wiki embed`"))
+            else:
+                out.append(("ok", f"embeddings available; {indexed} vectors indexed"))
     return out
 
 
