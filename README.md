@@ -28,7 +28,9 @@ llm-wiki log ingest "Topic"          # append to the chronological log.md
 llm-wiki search "query"              # keyword search (hybrid keyword+semantic when embeddings are set up)
 llm-wiki lint --fix                  # structural health check (orphans, broken links, stale, …)
 llm-wiki graph neighbors <slug>      # explore the knowledge graph (also: path / hubs / stats / export)
-llm-wiki status                      # page counts, last log entry, lint summary
+llm-wiki supersede <old> <new>       # mark old superseded by new (kept, but dropped from the catalog)
+llm-wiki review                      # surface pages that have decayed or are past review_by
+llm-wiki status                      # page counts, status/tier breakdown, review-due, lint summary
 llm-wiki doctor                      # health/setup check
 llm-wiki upgrade                     # refresh schema/commands/block to the installed version
 ```
@@ -56,6 +58,7 @@ wiki/
 
 ## Status
 
-Phases 1–3 are complete: the core wiki + CLI, the knowledge graph, and hybrid (keyword + semantic)
-search. See `docs/superpowers/specs/` and `docs/superpowers/plans/` for the design and the remaining
-roadmap (Phase 4 memory lifecycle/decay, Phase 5 automation/quality).
+Phases 1–4 are complete: the core wiki + CLI, the knowledge graph, hybrid (keyword + semantic) search,
+and the memory lifecycle (confidence/decay with evergreen pages, supersession, `review`). See
+`docs/superpowers/specs/` and `docs/superpowers/plans/` for the design and the remaining roadmap
+(Phase 5 automation/quality).
