@@ -11,6 +11,17 @@ from .managed_block import render_block, upsert_block
 _SLASH_COMMANDS = ("wiki-ingest", "wiki-query", "wiki-lint")
 
 
+def project_root_of(cfg: "WikiConfig") -> tuple[Path, bool]:
+    """Return (project_root, root_mode) for a wiki config.
+
+    Default layout: cfg.root is <project>/wiki → project_root is its parent.
+    Root layout: cfg.root is the project itself.
+    """
+    if cfg.root.name == "wiki":
+        return cfg.root.parent, False
+    return cfg.root, True
+
+
 def _touch(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
