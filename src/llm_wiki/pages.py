@@ -43,6 +43,9 @@ def new_page(
     tags: Iterable[str] = (),
     sources: Iterable[str] = (),
     slug: str | None = None,
+    tier: str = "semantic",
+    confidence: float | None = None,
+    evergreen: bool = False,
 ) -> Path:
     """Create a page file with correct frontmatter and a per-type body template."""
     if type not in cfg.allowed_types:
@@ -67,6 +70,9 @@ def new_page(
         summary=summary,
         tags=list(tags),
         sources=list(sources),
+        tier=tier,
+        confidence=confidence,
+        evergreen=evergreen,
     )
     path.write_text(dump(fm, _body_for(type)), encoding="utf-8")
     return path

@@ -34,6 +34,7 @@ class PageFrontmatter:
     superseded_by: list[str] = field(default_factory=list)
     contradicts: list[str] = field(default_factory=list)
     tier: str = "semantic"
+    evergreen: bool = False  # exempt from decay (timeless content)
     entities: list[dict] = field(default_factory=list)
     relations: list[dict] = field(default_factory=list)
 
@@ -86,6 +87,8 @@ def _coerce_shapes(data: dict) -> dict:
     for key in _STR_FIELDS:
         if key in out and out[key] is not None and not isinstance(out[key], str):
             out[key] = str(out[key])
+    if "evergreen" in out:
+        out["evergreen"] = bool(out["evergreen"])
     return out
 
 

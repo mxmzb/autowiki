@@ -108,3 +108,14 @@ def test_parse_coerces_relations_entries():
     )
     fm, _ = parse(text)
     assert fm.relations == [{"predicate": "uses", "target": "7"}]
+
+
+def test_evergreen_defaults_false_and_coerces_to_bool():
+    fm = PageFrontmatter(title="X", type="note", created=today(), updated=today())
+    assert fm.evergreen is False
+    text = (
+        "---\ntitle: X\ntype: note\ncreated: '2026-01-01'\nupdated: '2026-01-01'\n"
+        "evergreen: maybe\n---\nbody\n"
+    )
+    parsed, _ = parse(text)
+    assert parsed.evergreen is True
