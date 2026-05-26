@@ -30,6 +30,21 @@ def test_sources_command_marks_pending_and_ingested(wiki_cfg: WikiConfig, tmp_pa
     assert "a\n" not in r.stdout  # the ingested one is omitted in --pending mode
 
 
+def test_new_source_command_creates_empty(wiki_cfg: WikiConfig):
+    r = runner.invoke(app, ["new-source", "My Note", "--wiki", str(wiki_cfg.root)])
+    assert r.exit_code == 0
+    assert (wiki_cfg.inbox_dir / "my-note.md").exists()
+    assert (wiki_cfg.inbox_dir / "my-note.md").read_text() == ""
+
+
+def test_new_source_command_reads_stdin(wiki_cfg: WikiConfig):
+    r = runner.invoke(
+        app, ["new-source", "Piped", "--wiki", str(wiki_cfg.root)], input="pasted content"
+    )
+    assert r.exit_code == 0
+    assert (wiki_cfg.inbox_dir / "piped.md").read_text() == "pasted content"
+
+
 def test_status_reports_pending_sources(wiki_cfg: WikiConfig, tmp_path: Path):
     src = tmp_path / "notes.txt"
     src.write_text("hi")

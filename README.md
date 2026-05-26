@@ -21,7 +21,8 @@ environment — after a **dependency change** (e.g. a new package), re-run
 llm-wiki init . --target claude      # scaffold wiki/ + CLAUDE.md managed block + slash commands
                                      #   --target generic for AGENTS.md; --root for a wiki at repo root
                                      #   --hooks to install opt-in Claude hygiene hooks
-llm-wiki add-source notes.md         # vendor a source into wiki/inbox/  → prints a source id
+llm-wiki add-source notes.md         # vendor an existing file/URL into wiki/inbox/  → prints a source id
+llm-wiki new-source "Meeting Notes"  # create a fresh inbox source (empty, or pipe content in)
 llm-wiki new-page "Topic" --type concept --summary "…" --sources <id>
 llm-wiki index                       # rebuild index.md from page frontmatter
 llm-wiki log ingest "Topic"          # append to the chronological log.md

@@ -5,7 +5,13 @@ import pytest
 import llm_wiki.sources as sources
 from llm_wiki.config import WikiConfig
 from llm_wiki.pages import new_page
-from llm_wiki.sources import add_source, ingested_ids, pending_sources, source_status
+from llm_wiki.sources import (
+    add_source,
+    ingested_ids,
+    new_source,
+    pending_sources,
+    source_status,
+)
 
 
 def test_add_local_file_copies_into_inbox(wiki_cfg: WikiConfig, tmp_path: Path):
@@ -81,6 +87,29 @@ def test_source_status_marks_each(wiki_cfg: WikiConfig, tmp_path: Path):
     assert marks[idb] is False
     # .gitkeep is never counted as a source
     assert ".gitkeep" not in marks and "" not in marks
+
+
+def test_new_source_creates_empty_file_with_slugified_id(wiki_cfg: WikiConfig):
+    path = new_source(wiki_cfg, "Meeting Notes 2026")
+    assert path.name == "meeting-notes-2026.md"
+    assert path.read_text() == ""
+    assert "meeting-notes-2026" in pending_sources(wiki_cfg)
+
+
+def test_new_source_writes_content(wiki_cfg: WikiConfig):
+    path = new_source(wiki_cfg, "Notes", content="hello world")
+    assert path.read_text() == "hello world"
+
+
+def test_new_source_custom_ext(wiki_cfg: WikiConfig):
+    path = new_source(wiki_cfg, "Data", ext="txt")
+    assert path.name == "data.txt"
+
+
+def test_new_source_duplicate_raises(wiki_cfg: WikiConfig):
+    new_source(wiki_cfg, "Dup")
+    with pytest.raises(FileExistsError):
+        new_source(wiki_cfg, "Dup")
 
 
 def test_add_source_unique_by_stem_across_extensions(wiki_cfg: WikiConfig, tmp_path: Path):

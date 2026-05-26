@@ -64,6 +64,27 @@ def add_source(
     return sid
 
 
+def new_source(
+    cfg: WikiConfig,
+    title: str,
+    source_id: str | None = None,
+    ext: str = ".md",
+    content: str = "",
+) -> Path:
+    """Create a fresh source file in inbox/ (vs add-source, which copies an existing one)."""
+    sid = source_id or slugify(title)
+    if not sid:
+        raise ValueError(f"could not derive a source id from {title!r}; pass an explicit id")
+    if ext and not ext.startswith("."):
+        ext = "." + ext
+    cfg.inbox_dir.mkdir(parents=True, exist_ok=True)
+    if any(p.is_file() and p.stem == sid for p in cfg.inbox_dir.iterdir()):
+        raise FileExistsError(f"a source with id {sid!r} already exists in inbox/")
+    target = cfg.inbox_dir / f"{sid}{ext}"
+    target.write_text(content, encoding="utf-8")
+    return target
+
+
 def inbox_ids(cfg: WikiConfig) -> set[str]:
     """Source ids currently in inbox/ (file stems, excluding .gitkeep)."""
     if not cfg.inbox_dir.exists():

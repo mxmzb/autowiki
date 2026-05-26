@@ -25,7 +25,7 @@ from .pages import new_page
 from .quality import quality_report
 from .scaffold import init_wiki, project_root_of, resolve_target
 from .search import search as search_pages
-from .sources import add_source, pending_sources, source_status
+from .sources import add_source, new_source, pending_sources, source_status
 from .upgrade import upgrade as upgrade_wiki
 
 app = typer.Typer(
@@ -459,6 +459,24 @@ def quality_cmd(
     for d in items:
         missing = f"  (missing: {', '.join(d['missing'])})" if d["missing"] else ""
         typer.echo(f"{d['score']:.2f}  {d['slug']}{missing}")
+
+
+@app.command("new-source")
+def new_source_cmd(
+    title: str = typer.Argument(..., help="Title for the new source (becomes its slugified id)."),
+    id: str = typer.Option(None, "--id", help="Explicit source id."),
+    ext: str = typer.Option(".md", "--ext", help="File extension."),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Create a new (empty) source file in inbox/. Reads content from stdin if piped."""
+    cfg = _resolve_cfg(wiki)
+    content = "" if sys.stdin.isatty() else sys.stdin.read()
+    try:
+        path = new_source(cfg, title, source_id=id, ext=ext, content=content)
+    except (ValueError, FileExistsError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
+    typer.echo(str(path))
 
 
 @app.command("sources")
