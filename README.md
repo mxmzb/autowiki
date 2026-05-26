@@ -25,12 +25,17 @@ llm-wiki add-source notes.md         # vendor a source into wiki/inbox/  → pri
 llm-wiki new-page "Topic" --type concept --summary "…" --sources <id>
 llm-wiki index                       # rebuild index.md from page frontmatter
 llm-wiki log ingest "Topic"          # append to the chronological log.md
-llm-wiki search "query"              # BM25 over your pages
+llm-wiki search "query"              # keyword search (hybrid keyword+semantic when embeddings are set up)
 llm-wiki lint --fix                  # structural health check (orphans, broken links, stale, …)
+llm-wiki graph neighbors <slug>      # explore the knowledge graph (also: path / hubs / stats / export)
 llm-wiki status                      # page counts, last log entry, lint summary
 llm-wiki doctor                      # health/setup check
 llm-wiki upgrade                     # refresh schema/commands/block to the installed version
 ```
+
+**Semantic search (optional):** `pip install 'llm-wiki[embeddings]'`, then `llm-wiki embed` to build a
+local vector index — `search` then fuses keyword + semantic results, and `llm-wiki similar <slug>` finds
+near-duplicate pages. Without the extra, search stays keyword-only.
 
 Commands resolve the wiki from the current directory (walking up, and into a `wiki/` subdir), or
 pass `--wiki <path>`.
@@ -51,6 +56,6 @@ wiki/
 
 ## Status
 
-Phase 1 (the core wiki + CLI) is complete. See `docs/superpowers/specs/` and `docs/superpowers/plans/`
-for the design and the phased roadmap (Phase 2 knowledge graph, Phase 3 hybrid/vector search,
-Phase 4 memory lifecycle, Phase 5 automation/quality).
+Phases 1–3 are complete: the core wiki + CLI, the knowledge graph, and hybrid (keyword + semantic)
+search. See `docs/superpowers/specs/` and `docs/superpowers/plans/` for the design and the remaining
+roadmap (Phase 4 memory lifecycle/decay, Phase 5 automation/quality).
