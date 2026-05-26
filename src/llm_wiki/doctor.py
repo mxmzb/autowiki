@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from . import embeddings, vectorindex
+from . import embeddings, lifecycle, vectorindex
 from .config import SCHEMA_VERSION, WikiConfig
 from .hooks import hooks_installed
 from .lint import run_lint
@@ -60,15 +60,19 @@ def doctor(cfg: WikiConfig) -> list[tuple[str, str]]:
 
 
 def status(cfg: WikiConfig) -> dict:
-    """Content overview: page counts by type, total, last log entry, lint counts."""
+    """Content overview: counts by type/status/tier, last log entry, lint + review counts."""
     counts: dict[str, int] = {}
+    by_status: dict[str, int] = {}
+    by_tier: dict[str, int] = {}
     for path in list_page_paths(cfg):
         try:
             fm, _ = load_page(path)
-            key = fm.type or "untyped"
         except Exception:
-            key = "(unparseable)"
-        counts[key] = counts.get(key, 0) + 1
+            counts["(unparseable)"] = counts.get("(unparseable)", 0) + 1
+            continue
+        counts[fm.type or "untyped"] = counts.get(fm.type or "untyped", 0) + 1
+        by_status[fm.status] = by_status.get(fm.status, 0) + 1
+        by_tier[fm.tier] = by_tier.get(fm.tier, 0) + 1
 
     last_log = ""
     if cfg.log_file.exists():
@@ -81,6 +85,9 @@ def status(cfg: WikiConfig) -> dict:
     return {
         "counts": counts,
         "total": sum(counts.values()),
+        "by_status": by_status,
+        "by_tier": by_tier,
+        "review_due": len(lifecycle.review(cfg)),
         "last_log": last_log,
         "lint_errors": sum(1 for i in issues if i.level == "error"),
         "lint_warnings": sum(1 for i in issues if i.level == "warning"),

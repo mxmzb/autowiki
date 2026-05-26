@@ -16,6 +16,8 @@ from . import vectorindex
 from .doctor import doctor as doctor_check
 from .doctor import status as status_report
 from .hooks import install_hooks, run_hook, uninstall_hooks
+from .lifecycle import review as lifecycle_review
+from .lifecycle import supersede as lifecycle_supersede
 from .lint import fix as lint_fix
 from .lint import run_lint
 from .log import append_log
@@ -106,6 +108,9 @@ def new_page_cmd(
     tags: str = typer.Option("", "--tags", help="Comma-separated."),
     sources: str = typer.Option("", "--sources", help="Comma-separated source ids."),
     slug: str = typer.Option(None, "--slug"),
+    tier: str = typer.Option("semantic", "--tier", help="working|episodic|semantic|procedural"),
+    confidence: float = typer.Option(None, "--confidence", help="0.0–1.0"),
+    evergreen: bool = typer.Option(False, "--evergreen", help="Exempt from decay (timeless)."),
     wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
 ) -> None:
     """Create a new wiki page with correct frontmatter. Prints the created path."""
@@ -119,6 +124,9 @@ def new_page_cmd(
             tags=_csv(tags),
             sources=_csv(sources),
             slug=slug,
+            tier=tier,
+            confidence=confidence,
+            evergreen=evergreen,
         )
     except (ValueError, FileExistsError) as exc:
         typer.echo(str(exc), err=True)
@@ -263,6 +271,9 @@ def status_cmd(
     typer.echo(f"Pages: {s['total']}")
     for page_type, count in sorted(s["counts"].items()):
         typer.echo(f"  {page_type}: {count}")
+    typer.echo("Status: " + ", ".join(f"{k} {v}" for k, v in sorted(s["by_status"].items())))
+    typer.echo("Tiers:  " + ", ".join(f"{k} {v}" for k, v in sorted(s["by_tier"].items())))
+    typer.echo(f"Review due: {s['review_due']}")
     if s["last_log"]:
         typer.echo(f"Last log: {s['last_log']}")
     typer.echo(f"Lint: {s['lint_errors']} error(s), {s['lint_warnings']} warning(s)")
@@ -426,6 +437,41 @@ def similar_cmd(
         return
     for s, sc in results:
         typer.echo(f"{sc:.3f}  {s}")
+
+
+@app.command("supersede")
+def supersede_cmd(
+    old: str = typer.Argument(..., help="Slug of the page being superseded."),
+    new: str = typer.Argument(..., help="Slug of the replacement page."),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Mark OLD as superseded by NEW (wires both sides; OLD stays searchable)."""
+    cfg = _resolve_cfg(wiki)
+    try:
+        lifecycle_supersede(cfg, old, new)
+    except FileNotFoundError as exc:
+        typer.echo(f"page not found: {exc}", err=True)
+        raise typer.Exit(1)
+    typer.echo(f"{old} is now superseded by {new}.")
+
+
+@app.command("review")
+def review_cmd(
+    threshold: float = typer.Option(0.5, "--threshold", help="Retention below this is 'decayed'."),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """List pages needing attention (overdue/decayed/low-confidence; evergreen excluded)."""
+    cfg = _resolve_cfg(wiki)
+    items = lifecycle_review(cfg, threshold=threshold)
+    if json_out:
+        typer.echo(json.dumps(items))
+        return
+    if not items:
+        typer.echo("Nothing needs review.")
+        return
+    for item in items:
+        typer.echo(f"{item['retention']:.2f}  {item['slug']}  ({', '.join(item['reasons'])})")
 
 
 def main() -> None:
