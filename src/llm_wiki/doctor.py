@@ -49,7 +49,9 @@ def doctor(cfg: WikiConfig) -> list[tuple[str, str]]:
         if loaded is None:
             out.append(("warn", f"embeddings available ({cfg.embedding_provider}); no index — run `llm-wiki embed`"))
         else:
-            indexed, page_count = len(loaded[0]), len(list_page_paths(cfg))
+            # Compare against the parseable (embeddable) set, not raw file count,
+            # so an unparseable page doesn't read as a permanent "stale" index.
+            indexed, page_count = len(loaded[0]), len(vectorindex._current_pages(cfg))
             if indexed != page_count:
                 out.append(("warn", f"vector index stale ({indexed} indexed vs {page_count} pages); run `llm-wiki embed`"))
             else:

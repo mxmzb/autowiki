@@ -48,3 +48,11 @@ def test_upgrade_and_doctor_work_in_root_layout(tmp_path):
     findings = doctor(cfg)
     assert not any(level == "error" for level, _ in findings)
     assert any("managed block present" in msg for _level, msg in findings)
+
+
+def test_upgrade_ensures_index_is_gitignored(wiki_cfg: WikiConfig):
+    # Simulate a pre-Phase-3 wiki whose .gitignore lacks the .index/ line.
+    gi = wiki_cfg.root / ".gitignore"
+    gi.write_text("")
+    upgrade(wiki_cfg)
+    assert ".index/" in gi.read_text()

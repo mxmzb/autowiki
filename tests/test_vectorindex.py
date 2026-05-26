@@ -55,3 +55,16 @@ def test_similar_ranks_overlap_first(fake_embeddings, wiki_cfg: WikiConfig):
 def test_query_vector_empty_without_store(fake_embeddings, wiki_cfg: WikiConfig):
     backend = embeddings.get_backend(wiki_cfg)
     assert query_vector(wiki_cfg, [0.0] * backend.dim) == []
+
+
+def test_load_returns_none_on_torn_write(fake_embeddings, wiki_cfg: WikiConfig):
+    import json
+
+    import numpy as np
+
+    new_page(wiki_cfg, type="concept", title="A", summary="x")
+    build_or_update(wiki_cfg, embeddings.get_backend(wiki_cfg))
+    # simulate a torn write: matrix rows no longer match the stored slug count
+    meta = json.loads((wiki_cfg.index_dir / "embeddings.json").read_text())
+    np.save(wiki_cfg.index_dir / "vectors.npy", np.zeros((5, meta["dim"]), dtype="float32"))
+    assert load(wiki_cfg) is None  # inconsistent store treated as absent (rebuilds next embed)

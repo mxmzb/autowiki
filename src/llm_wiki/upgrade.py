@@ -6,13 +6,17 @@ from .frontmatter import dump, parse
 from .hooks import hooks_installed, install_hooks
 from .managed_block import render_block, upsert_block
 from .pages import list_page_paths
-from .scaffold import _SLASH_COMMANDS, project_root_of
+from .scaffold import _SLASH_COMMANDS, _ensure_gitignore_line, project_root_of
 
 
 def upgrade(cfg: WikiConfig) -> dict:
     """Refresh templates/commands/block/hooks to the current schema version and
     migrate page frontmatter, preserving user config and all content."""
     project_root, root_mode = project_root_of(cfg)
+
+    # Ensure derived-data dir is present and ignored (older wikis predate Phase 3).
+    _ensure_gitignore_line(cfg.root / ".gitignore", ".index/")
+    cfg.index_dir.mkdir(parents=True, exist_ok=True)
 
     # Refresh the maintainer schema.
     cfg.schema_file.write_text(load_template("SCHEMA.md"), encoding="utf-8")

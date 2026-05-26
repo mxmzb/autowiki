@@ -46,7 +46,10 @@ def load(cfg: WikiConfig):
     if not (_meta_path(cfg).exists() and _vectors_path(cfg).exists()):
         return None
     meta = json.loads(_meta_path(cfg).read_text(encoding="utf-8"))
-    return meta["slugs"], np.load(_vectors_path(cfg))
+    matrix = np.load(_vectors_path(cfg))
+    if len(meta.get("slugs", [])) != matrix.shape[0]:
+        return None  # torn/inconsistent write → treat as absent so the next embed rebuilds
+    return meta["slugs"], matrix
 
 
 def build_or_update(cfg: WikiConfig, backend: EmbeddingBackend) -> dict:

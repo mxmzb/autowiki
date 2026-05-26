@@ -29,3 +29,16 @@ def test_status_reports_last_log_entry(wiki_cfg: WikiConfig):
     append_log(wiki_cfg, "ingest", "Latest Thing")
     s = status(wiki_cfg)
     assert "Latest Thing" in s["last_log"]
+
+
+def test_doctor_index_not_stale_with_unparseable_page(fake_embeddings, wiki_cfg: WikiConfig):
+    from llm_wiki import embeddings
+    from llm_wiki.vectorindex import build_or_update
+
+    new_page(wiki_cfg, type="concept", title="Good", summary="x")
+    build_or_update(wiki_cfg, embeddings.get_backend(wiki_cfg))
+    # an unparseable page can never be embedded; it must not make the index read "stale"
+    (wiki_cfg.pages_dir / "broken.md").write_text("no frontmatter here\n")
+    findings = doctor(wiki_cfg)
+    assert not any("stale" in msg for _level, msg in findings)
+    assert any("vectors indexed" in msg for _level, msg in findings)
