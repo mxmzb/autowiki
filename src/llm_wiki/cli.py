@@ -24,7 +24,7 @@ from .log import append_log
 from .pages import new_page
 from .scaffold import init_wiki, project_root_of, resolve_target
 from .search import search as search_pages
-from .sources import add_source
+from .sources import add_source, source_status
 from .upgrade import upgrade as upgrade_wiki
 
 app = typer.Typer(
@@ -274,6 +274,7 @@ def status_cmd(
     typer.echo("Status: " + ", ".join(f"{k} {v}" for k, v in sorted(s["by_status"].items())))
     typer.echo("Tiers:  " + ", ".join(f"{k} {v}" for k, v in sorted(s["by_tier"].items())))
     typer.echo(f"Review due: {s['review_due']}")
+    typer.echo(f"Pending sources: {s['pending_sources']}")
     if s["last_log"]:
         typer.echo(f"Last log: {s['last_log']}")
     typer.echo(f"Lint: {s['lint_errors']} error(s), {s['lint_warnings']} warning(s)")
@@ -437,6 +438,27 @@ def similar_cmd(
         return
     for s, sc in results:
         typer.echo(f"{sc:.3f}  {s}")
+
+
+@app.command("sources")
+def sources_cmd(
+    pending: bool = typer.Option(False, "--pending", help="Show only un-ingested sources."),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """List inbox sources and whether each has been ingested into a page."""
+    cfg = _resolve_cfg(wiki)
+    items = source_status(cfg)
+    if pending:
+        items = [d for d in items if not d["ingested"]]
+    if json_out:
+        typer.echo(json.dumps(items))
+        return
+    if not items:
+        typer.echo("No pending sources." if pending else "No sources.")
+        return
+    for d in items:
+        typer.echo(f"[{'ingested' if d['ingested'] else 'pending'}]  {d['id']}")
 
 
 @app.command("supersede")

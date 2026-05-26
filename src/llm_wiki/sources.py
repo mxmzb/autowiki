@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from .config import WikiConfig
-from .pages import slugify
+from .pages import list_page_paths, load_page, slugify
 
 
 def _is_url(src: str) -> bool:
@@ -62,3 +62,33 @@ def add_source(
         shutil.copyfile(src, target)
 
     return sid
+
+
+def inbox_ids(cfg: WikiConfig) -> set[str]:
+    """Source ids currently in inbox/ (file stems, excluding .gitkeep)."""
+    if not cfg.inbox_dir.exists():
+        return set()
+    return {p.stem for p in cfg.inbox_dir.iterdir() if p.is_file() and p.name != ".gitkeep"}
+
+
+def ingested_ids(cfg: WikiConfig) -> set[str]:
+    """Source ids referenced by at least one page's `sources:` (i.e. turned into the wiki)."""
+    out: set[str] = set()
+    for path in list_page_paths(cfg):
+        try:
+            fm, _ = load_page(path)
+        except Exception:
+            continue
+        out.update(str(s) for s in fm.sources)
+    return out
+
+
+def pending_sources(cfg: WikiConfig) -> list[str]:
+    """Inbox sources not yet referenced by any page (awaiting ingestion)."""
+    return sorted(inbox_ids(cfg) - ingested_ids(cfg))
+
+
+def source_status(cfg: WikiConfig) -> list[dict]:
+    """Each inbox source with its ingested flag."""
+    ingested = ingested_ids(cfg)
+    return [{"id": sid, "ingested": sid in ingested} for sid in sorted(inbox_ids(cfg))]

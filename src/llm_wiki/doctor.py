@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from . import embeddings, lifecycle, vectorindex
+from . import embeddings, lifecycle, sources, vectorindex
 from .config import SCHEMA_VERSION, WikiConfig
 from .hooks import hooks_installed
 from .lint import run_lint
@@ -88,6 +88,7 @@ def status(cfg: WikiConfig) -> dict:
         "by_status": by_status,
         "by_tier": by_tier,
         "review_due": len(lifecycle.review(cfg)),
+        "pending_sources": len(sources.pending_sources(cfg)),
         "last_log": last_log,
         "lint_errors": sum(1 for i in issues if i.level == "error"),
         "lint_warnings": sum(1 for i in issues if i.level == "warning"),
