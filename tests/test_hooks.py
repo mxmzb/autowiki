@@ -65,6 +65,29 @@ def test_run_hook_ignores_junk(wiki_cfg: WikiConfig):
     assert run_hook("post-edit", json.dumps({"tool_input": {}})) == (0, "")
 
 
+def test_install_includes_session_start(tmp_path: Path):
+    install_hooks(tmp_path)
+    data = json.loads(_settings(tmp_path).read_text())
+    assert "SessionStart" in data["hooks"]
+    uninstall_hooks(tmp_path)
+    assert not hooks_installed(tmp_path)
+
+
+def test_session_start_summary_mentions_pending(wiki_cfg: WikiConfig, tmp_path: Path):
+    from llm_wiki.sources import add_source
+
+    src = tmp_path / "x.txt"
+    src.write_text("hi")
+    add_source(wiki_cfg, str(src))
+    code, msg = run_hook("session-start", json.dumps({"cwd": str(wiki_cfg.root)}))
+    assert code == 0
+    assert "awaiting ingest" in msg
+
+
+def test_session_start_clean_wiki_is_silent(wiki_cfg: WikiConfig):
+    assert run_hook("session-start", json.dumps({"cwd": str(wiki_cfg.root)})) == (0, "")
+
+
 def test_run_hook_never_raises_on_non_object_payloads(wiki_cfg: WikiConfig):
     # Valid JSON that isn't an object, or whose tool_input isn't a dict, must
     # never raise — the hook would crash Claude's PreToolUse otherwise.

@@ -25,7 +25,7 @@ from .pages import new_page
 from .quality import quality_report
 from .scaffold import init_wiki, project_root_of, resolve_target
 from .search import search as search_pages
-from .sources import add_source, source_status
+from .sources import add_source, pending_sources, source_status
 from .upgrade import upgrade as upgrade_wiki
 
 app = typer.Typer(
@@ -518,6 +518,25 @@ def review_cmd(
         return
     for item in items:
         typer.echo(f"{item['retention']:.2f}  {item['slug']}  ({', '.join(item['reasons'])})")
+
+
+@app.command("maintain")
+def maintain_cmd(
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Deterministic maintenance pass: rebuild index, then report lint/review/pending/quality."""
+    cfg = _resolve_cfg(wiki)
+    write_index(cfg)
+    issues = run_lint(cfg)
+    errors = sum(1 for i in issues if i.level == "error")
+    warnings = sum(1 for i in issues if i.level == "warning")
+    weak = sum(1 for d in quality_report(cfg) if d["score"] < 0.5)
+    typer.echo("Maintenance report:")
+    typer.echo("  index: rebuilt")
+    typer.echo(f"  lint: {errors} error(s), {warnings} warning(s)")
+    typer.echo(f"  review due: {len(lifecycle_review(cfg))}")
+    typer.echo(f"  pending sources: {len(pending_sources(cfg))}")
+    typer.echo(f"  low-quality pages: {weak}")
 
 
 def main() -> None:

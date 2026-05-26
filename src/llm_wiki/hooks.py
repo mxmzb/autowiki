@@ -4,9 +4,11 @@ import copy
 import json
 from pathlib import Path
 
-from .catalog import write_index
+from .catalog import index_is_current, write_index
 from .config import find_wiki_root, load_config
+from .lifecycle import review
 from .lint import run_lint
+from .sources import pending_sources
 
 HOOK_PREFIX = "llm-wiki hook"
 
@@ -20,6 +22,10 @@ _DESIRED = {
     "PostToolUse": {
         "matcher": "Edit|Write",
         "hooks": [{"type": "command", "command": "llm-wiki hook post-edit"}],
+    },
+    # Proactive: surface what needs attention to the agent at session start.
+    "SessionStart": {
+        "hooks": [{"type": "command", "command": "llm-wiki hook session-start"}],
     },
 }
 
@@ -97,6 +103,25 @@ def hooks_installed(project_root: Path) -> bool:
     return False
 
 
+def _session_summary(cfg) -> str:
+    """A short 'what needs attention' line for the SessionStart hook (empty if nothing)."""
+    parts = []
+    pending = len(pending_sources(cfg))
+    if pending:
+        parts.append(f"{pending} source(s) awaiting ingest")
+    due = len(review(cfg))
+    if due:
+        parts.append(f"{due} page(s) due for review")
+    errors = sum(1 for i in run_lint(cfg) if i.level == "error")
+    if errors:
+        parts.append(f"{errors} lint error(s)")
+    if not index_is_current(cfg):
+        parts.append("index stale")
+    if not parts:
+        return ""
+    return "llm-wiki: " + ", ".join(parts) + ". Run /wiki-ingest for pending sources and /wiki-lint to fix issues."
+
+
 def run_hook(event: str, stdin_text: str) -> tuple[int, str]:
     """Dispatch a hook event. Returns (exit_code, message). Never raises on bad input."""
     try:
@@ -105,6 +130,14 @@ def run_hook(event: str, stdin_text: str) -> tuple[int, str]:
         return (0, "")
     if not isinstance(data, dict):
         return (0, "")  # non-object payload (array/scalar/null) — never block
+
+    if event == "session-start":
+        cwd = data.get("cwd")
+        root = find_wiki_root(Path(cwd)) if cwd else find_wiki_root(Path.cwd())
+        if root is None:
+            return (0, "")
+        return (0, _session_summary(load_config(root)))
+
     tool_input = data.get("tool_input")
     file_path = tool_input.get("file_path") if isinstance(tool_input, dict) else None
     if not file_path:
