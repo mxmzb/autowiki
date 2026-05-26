@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+import json
+from dataclasses import asdict
 from pathlib import Path
 
 import typer
 
 from . import __version__
-from .config import SCHEMA_VERSION
+from .catalog import index_is_current, write_index
+from .config import SCHEMA_VERSION, WikiConfig, find_wiki_root, load_config
+from .lint import fix as lint_fix
+from .lint import run_lint
+from .log import append_log
+from .pages import new_page
 from .scaffold import init_wiki, resolve_target
+from .search import search as search_pages
+from .sources import add_source
 
 app = typer.Typer(
     help="Initialize and maintain Karpathy-style LLM wikis.",
@@ -42,6 +51,140 @@ def init(
     resolved = resolve_target(path, target, yes)
     cfg, action = init_wiki(path, target=resolved, root_mode=root, force=force)
     typer.echo(f"Wiki {action} at {cfg.root} (target: {cfg.target})")
+
+
+def _resolve_cfg(path: Path) -> WikiConfig:
+    root = find_wiki_root(path)
+    if root is None:
+        typer.echo(
+            "No wiki found. Run `llm-wiki init` here, or pass --wiki <path-inside-a-wiki>.",
+            err=True,
+        )
+        raise typer.Exit(1)
+    return load_config(root)
+
+
+def _csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+@app.command("add-source")
+def add_source_cmd(
+    src: str = typer.Argument(..., help="Local file path or URL."),
+    title: str = typer.Option(None, "--title", help="Optional title used to derive the id."),
+    id: str = typer.Option(None, "--id", help="Explicit source id."),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Vendor a raw source (file or URL) into the wiki inbox. Prints the source id."""
+    cfg = _resolve_cfg(wiki)
+    try:
+        sid = add_source(cfg, src, title=title, source_id=id)
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
+    typer.echo(sid)
+
+
+@app.command("new-page")
+def new_page_cmd(
+    title: str = typer.Argument(..., help="Page title."),
+    page_type: str = typer.Option(..., "--type", help="entity|concept|source-summary|note|<custom>"),
+    summary: str = typer.Option("", "--summary"),
+    tags: str = typer.Option("", "--tags", help="Comma-separated."),
+    sources: str = typer.Option("", "--sources", help="Comma-separated source ids."),
+    slug: str = typer.Option(None, "--slug"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Create a new wiki page with correct frontmatter. Prints the created path."""
+    cfg = _resolve_cfg(wiki)
+    try:
+        path = new_page(
+            cfg,
+            type=page_type,
+            title=title,
+            summary=summary,
+            tags=_csv(tags),
+            sources=_csv(sources),
+            slug=slug,
+        )
+    except (ValueError, FileExistsError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
+    typer.echo(str(path))
+
+
+@app.command("index")
+def index_cmd(
+    check: bool = typer.Option(False, "--check", help="Verify index is current; exit 2 if stale."),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Rebuild index.md from page frontmatter (or --check that it is current)."""
+    cfg = _resolve_cfg(wiki)
+    if check:
+        if index_is_current(cfg):
+            typer.echo("index.md is current.")
+        else:
+            typer.echo("index.md is out of date; run `llm-wiki index`.", err=True)
+            raise typer.Exit(2)
+    else:
+        write_index(cfg)
+        typer.echo("index.md rebuilt.")
+
+
+@app.command("log")
+def log_cmd(
+    action: str = typer.Argument(..., help="e.g. ingest|query|lint|note|edit."),
+    title: str = typer.Argument(...),
+    note: str = typer.Option(None, "--note"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Append an entry to log.md."""
+    cfg = _resolve_cfg(wiki)
+    append_log(cfg, action, title, note=note)
+    typer.echo(f"logged: {action} | {title}")
+
+
+@app.command("search")
+def search_cmd(
+    query: str = typer.Argument(...),
+    page_type: str = typer.Option(None, "--type"),
+    tag: str = typer.Option(None, "--tag"),
+    limit: int = typer.Option(10, "--limit"),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Search the wiki (BM25 over title, summary, tags, and body)."""
+    cfg = _resolve_cfg(wiki)
+    hits = search_pages(cfg, query, type=page_type, tag=tag, limit=limit)
+    if json_out:
+        typer.echo(json.dumps([asdict(h) for h in hits]))
+        return
+    if not hits:
+        typer.echo("No matches.")
+        return
+    for h in hits:
+        typer.echo(f"{h.slug}  —  {h.title}\n    {h.snippet}")
+
+
+@app.command("lint")
+def lint_cmd(
+    fix: bool = typer.Option(False, "--fix", help="Apply safe auto-repairs."),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Check wiki health. Exits 2 if any error-level issues remain."""
+    cfg = _resolve_cfg(wiki)
+    issues = lint_fix(cfg) if fix else run_lint(cfg)
+    if json_out:
+        typer.echo(json.dumps([asdict(i) for i in issues]))
+    elif not issues:
+        typer.echo("Clean — no issues.")
+    else:
+        for i in issues:
+            location = i.page or "(wiki)"
+            typer.echo(f"[{i.level}] {i.code} — {location}: {i.message}")
+    if any(i.level == "error" for i in issues):
+        raise typer.Exit(2)
 
 
 def main() -> None:
