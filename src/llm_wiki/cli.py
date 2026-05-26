@@ -10,6 +10,8 @@ import typer
 from . import __version__
 from .catalog import index_is_current, write_index
 from .config import SCHEMA_VERSION, WikiConfig, find_wiki_root, load_config
+from .doctor import doctor as doctor_check
+from .doctor import status as status_report
 from .hooks import install_hooks, run_hook, uninstall_hooks
 from .lint import fix as lint_fix
 from .lint import run_lint
@@ -226,6 +228,35 @@ def hook_cmd(
     if message:
         typer.echo(message, err=code != 0)
     raise typer.Exit(code)
+
+
+@app.command("doctor")
+def doctor_cmd(
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Report wiki health and setup. Exits 1 if any error-level finding."""
+    cfg = _resolve_cfg(wiki)
+    findings = doctor_check(cfg)
+    marks = {"ok": "✓", "warn": "!", "error": "✗"}
+    for level, message in findings:
+        typer.echo(f"{marks.get(level, '-')} {message}")
+    if any(level == "error" for level, _ in findings):
+        raise typer.Exit(1)
+
+
+@app.command("status")
+def status_cmd(
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Print a content overview of the wiki."""
+    cfg = _resolve_cfg(wiki)
+    s = status_report(cfg)
+    typer.echo(f"Pages: {s['total']}")
+    for page_type, count in sorted(s["counts"].items()):
+        typer.echo(f"  {page_type}: {count}")
+    if s["last_log"]:
+        typer.echo(f"Last log: {s['last_log']}")
+    typer.echo(f"Lint: {s['lint_errors']} error(s), {s['lint_warnings']} warning(s)")
 
 
 def main() -> None:
