@@ -72,3 +72,26 @@ def test_supersede_missing_page_raises(wiki_cfg: WikiConfig):
 
     with pytest.raises(FileNotFoundError):
         supersede(wiki_cfg, "only", "ghost")
+
+
+def test_retention_clamped_and_safe_on_bad_confidence():
+    # negative / >1 / boolean confidence must never crash and must stay in (0, 1]
+    for c in (-0.5, -1.0, 5.0, True):
+        r = retention(_fm(confidence=c, updated="2025-06-01"), NOW)
+        assert 0.0 < r <= 1.0
+
+
+def test_review_survives_bad_confidence_page(wiki_cfg: WikiConfig):
+    p = new_page(wiki_cfg, type="note", title="Bad")
+    fm, body = load_page(p)
+    fm.confidence = -0.5  # type: ignore[assignment]
+    p.write_text(dump(fm, body))
+    review(wiki_cfg)  # must not raise
+
+
+def test_supersede_self_raises(wiki_cfg: WikiConfig):
+    new_page(wiki_cfg, type="concept", title="A")
+    import pytest
+
+    with pytest.raises(ValueError):
+        supersede(wiki_cfg, "a", "a")

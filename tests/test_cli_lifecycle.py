@@ -38,6 +38,12 @@ def test_supersede_missing_page_exits_1(wiki_cfg: WikiConfig):
     assert r.exit_code == 1
 
 
+def test_supersede_self_exits_1(wiki_cfg: WikiConfig):
+    new_page(wiki_cfg, type="concept", title="A")
+    r = runner.invoke(app, ["supersede", "a", "a", "--wiki", str(wiki_cfg.root)])
+    assert r.exit_code == 1
+
+
 def test_review_lists_overdue(wiki_cfg: WikiConfig):
     p = new_page(wiki_cfg, type="note", title="Stale", tier="working")
     fm, body = parse(p.read_text())

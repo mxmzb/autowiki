@@ -452,6 +452,9 @@ def supersede_cmd(
     except FileNotFoundError as exc:
         typer.echo(f"page not found: {exc}", err=True)
         raise typer.Exit(1)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
     typer.echo(f"{old} is now superseded by {new}.")
 
 

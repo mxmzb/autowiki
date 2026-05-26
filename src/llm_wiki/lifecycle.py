@@ -22,9 +22,10 @@ def _age_days(updated: str, now: dt.date) -> int:
 
 
 def _confidence(fm: PageFrontmatter) -> float:
-    if isinstance(fm.confidence, (int, float)):
-        return float(fm.confidence)
-    return 0.5
+    # bool is an int subclass; treat a non-numeric/boolean confidence as "unset".
+    if isinstance(fm.confidence, bool) or not isinstance(fm.confidence, (int, float)):
+        return 0.5
+    return min(1.0, max(0.0, float(fm.confidence)))  # clamp keeps strength > 0 and retention in (0, 1]
 
 
 def retention(fm: PageFrontmatter, now: dt.date | None = None) -> float:
@@ -66,6 +67,8 @@ def review(cfg: WikiConfig, threshold: float = 0.5) -> list[dict]:
 
 def supersede(cfg: WikiConfig, old_slug: str, new_slug: str) -> None:
     """Mark old_slug as superseded by new_slug, wiring both sides. Idempotent."""
+    if old_slug == new_slug:
+        raise ValueError("a page cannot supersede itself")
     old_path = cfg.pages_dir / f"{old_slug}.md"
     new_path = cfg.pages_dir / f"{new_slug}.md"
     if not old_path.exists():
