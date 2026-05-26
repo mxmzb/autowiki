@@ -23,8 +23,10 @@ All structural bookkeeping is done by the `llm-wiki` CLI; you do the reading and
 ## Frontmatter
 Required: `title`, `type`, `created`, `updated`. Set by `new-page`; update `updated` when you edit.
 Useful now: `summary` (one line, shown in `index.md`), `tags`, `aliases`, `sources`, `related`.
+Typed edges: `relations: [{predicate: <verb>, target: <slug>}]` — e.g. `{predicate: uses, target: pytorch}`.
+These (with `[[links]]` and `related`) form the knowledge graph (see below).
 Reserved (leave defaults unless you know them): `status`, `confidence`, `review_by`,
-`supersedes`, `superseded_by`, `contradicts`, `tier`, `entities`, `relations`.
+`supersedes`, `superseded_by`, `contradicts`, `tier`, `entities`.
 
 ## Workflows
 
@@ -38,16 +40,26 @@ Reserved (leave defaults unless you know them): `status`, `confidence`, `review_
 
 ### Answer a query
 1. `llm-wiki search "<question>"`; read the top pages.
-2. Synthesize an answer with `[[links]]` to your sources.
-3. If the answer is reusable, `llm-wiki new-page --type note`, write it, then `llm-wiki index` and `llm-wiki log query "<question>"`.
+2. Surface connections search misses: `llm-wiki graph neighbors <slug>` and `llm-wiki graph path <a> <b>`.
+3. Synthesize an answer with `[[links]]` to your sources.
+4. If the answer is reusable, `llm-wiki new-page --type note`, write it, then `llm-wiki index` and `llm-wiki log query "<question>"`.
 
 ### Lint
 1. `llm-wiki lint --json`; read the issues.
 2. Fix broken links, orphans, missing summaries, and stale pages. Re-run `llm-wiki lint` until clean.
 
+## Knowledge graph
+Pages are nodes; edges come from `[[wiki-links]]`, the `related`/`supersedes`/`contradicts` lists, and
+typed `relations`. The graph is computed on demand — query it with:
+- `llm-wiki graph neighbors <slug> [--depth N] [--predicate P]` — connected pages.
+- `llm-wiki graph path <a> <b>` — how two pages connect.
+- `llm-wiki graph hubs` — the most-connected (most important) pages.
+- `llm-wiki graph stats` / `llm-wiki graph export --format dot|json`.
+Strengthen the graph during ingest by adding `relations` entries and `[[links]]` between related pages.
+
 ## Customizing your wiki
 This file is yours to edit. To adapt the wiki to your use case:
-- **Add a page type:** describe it here under "Page types" and use `llm-wiki new-page --type <yourtype>`.
-  (A future version will let `lint` accept custom types via `[wiki].extra_types` in `.llm-wiki.toml`.)
+- **Add a page type:** describe it here under "Page types", add it to `[wiki].extra_types` in
+  `.llm-wiki.toml`, and use `llm-wiki new-page --type <yourtype>`.
 - **Change the stale threshold:** set `stale_days` in `.llm-wiki.toml`.
 - **Change conventions:** edit the rules above; the CLI enforces structure, this file guides judgement.

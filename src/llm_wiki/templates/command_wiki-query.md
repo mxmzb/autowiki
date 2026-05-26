@@ -7,6 +7,7 @@ Answer the question `$ARGUMENTS` using the wiki, following the **Answer a query*
 
 Steps:
 1. Run `llm-wiki search "$ARGUMENTS"` and read the top pages.
-2. Synthesize an answer with `[[slug]]` citations to the pages you used.
-3. If the answer is reusable, create a `note` page with `llm-wiki new-page`, then run `llm-wiki index`
+2. Surface connections search misses with `llm-wiki graph neighbors <slug>` and `llm-wiki graph path <a> <b>`.
+3. Synthesize an answer with `[[slug]]` citations to the pages you used.
+4. If the answer is reusable, create a `note` page with `llm-wiki new-page`, then run `llm-wiki index`
    and `llm-wiki log query "$ARGUMENTS"`.

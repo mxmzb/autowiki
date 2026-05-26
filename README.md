@@ -11,6 +11,10 @@ lint) so the agent can focus on the reading and writing.
 uv tool install --editable .
 ```
 
+Edits to the source take effect immediately, but the globally-installed tool has its own isolated
+environment — after a **dependency change** (e.g. a new package), re-run
+`uv tool install --editable . --reinstall` so the global `llm-wiki` picks it up.
+
 ## Quick start
 
 ```
