@@ -6,6 +6,7 @@ from . import config as cfgmod
 from .assets import load_template
 from .config import WikiConfig
 from .frontmatter import today
+from .hooks import install_hooks
 from .managed_block import render_block, upsert_block
 
 _SLASH_COMMANDS = ("wiki-ingest", "wiki-query", "wiki-lint")
@@ -61,6 +62,7 @@ def init_wiki(
     target: str = "claude",
     root_mode: bool = False,
     force: bool = False,
+    with_hooks: bool = False,
 ) -> tuple[WikiConfig, str]:
     """Scaffold a wiki. Returns (config, action) where action is created|recreated|updated."""
     project_root = Path(project_root).resolve()
@@ -72,6 +74,8 @@ def init_wiki(
         # originally-chosen target (a re-init does not switch claude <-> generic).
         cfg = cfgmod.load_config(wiki_root)
         _write_managed_block(project_root, cfg, root_mode)
+        if with_hooks and cfg.target == "claude":
+            install_hooks(project_root)
         return cfg, "updated"
 
     (wiki_root / "inbox").mkdir(parents=True, exist_ok=True)
@@ -98,6 +102,9 @@ def init_wiki(
             (cmd_dir / f"{name}.md").write_text(
                 load_template(f"command_{name}.md"), encoding="utf-8"
             )
+
+    if with_hooks and target == "claude":
+        install_hooks(project_root)
 
     return cfg, ("recreated" if existed else "created")
 

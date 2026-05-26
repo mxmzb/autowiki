@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import asdict
 from pathlib import Path
 
@@ -9,11 +10,12 @@ import typer
 from . import __version__
 from .catalog import index_is_current, write_index
 from .config import SCHEMA_VERSION, WikiConfig, find_wiki_root, load_config
+from .hooks import install_hooks, run_hook, uninstall_hooks
 from .lint import fix as lint_fix
 from .lint import run_lint
 from .log import append_log
 from .pages import new_page
-from .scaffold import init_wiki, resolve_target
+from .scaffold import init_wiki, project_root_of, resolve_target
 from .search import search as search_pages
 from .sources import add_source
 
@@ -46,10 +48,15 @@ def init(
         help="Refresh templates/config over an existing wiki (never overwrites index.md, log.md, pages, or inbox).",
     ),
     yes: bool = typer.Option(False, "--yes", help="Non-interactive."),
+    hooks: bool = typer.Option(
+        False, "--hooks", help="Install opt-in Claude hygiene hooks (claude target only)."
+    ),
 ) -> None:
     """Initialize an LLM wiki in PATH (new or existing project)."""
     resolved = resolve_target(path, target, yes)
-    cfg, action = init_wiki(path, target=resolved, root_mode=root, force=force)
+    cfg, action = init_wiki(
+        path, target=resolved, root_mode=root, force=force, with_hooks=hooks
+    )
     typer.echo(f"Wiki {action} at {cfg.root} (target: {cfg.target})")
 
 
@@ -185,6 +192,40 @@ def lint_cmd(
             typer.echo(f"[{i.level}] {i.code} — {location}: {i.message}")
     if any(i.level == "error" for i in issues):
         raise typer.Exit(2)
+
+
+@app.command("install-hooks")
+def install_hooks_cmd(
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Install the opt-in Claude hygiene hooks into .claude/settings.json."""
+    cfg = _resolve_cfg(wiki)
+    project_root, _ = project_root_of(cfg)
+    install_hooks(project_root)
+    typer.echo(f"Installed llm-wiki hooks in {project_root / '.claude' / 'settings.json'}")
+
+
+@app.command("uninstall-hooks")
+def uninstall_hooks_cmd(
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Remove the llm-wiki hooks from .claude/settings.json."""
+    cfg = _resolve_cfg(wiki)
+    project_root, _ = project_root_of(cfg)
+    uninstall_hooks(project_root)
+    typer.echo("Removed llm-wiki hooks.")
+
+
+@app.command("hook")
+def hook_cmd(
+    event: str = typer.Argument(..., help="pre-edit|post-edit (invoked by Claude hooks)."),
+) -> None:
+    """Internal: dispatch a Claude hook event (reads the hook payload on stdin)."""
+    raw = "" if sys.stdin.isatty() else sys.stdin.read()
+    code, message = run_hook(event, raw)
+    if message:
+        typer.echo(message, err=code != 0)
+    raise typer.Exit(code)
 
 
 def main() -> None:
