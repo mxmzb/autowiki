@@ -11,7 +11,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "numpy>=1.24"]
+embeddings = ["fastembed>=0.3", "numpy>=1.24"]
 
 [project.scripts]
 llm-wiki = "llm_wiki.cli:main"
