@@ -47,7 +47,7 @@ Reserved (leave defaults unless you know them): `status`, `confidence`, `review_
 
 ## Customizing your wiki
 This file is yours to edit. To adapt the wiki to your use case:
-- **Add a page type:** describe it here under "Page types" and use `llm-wiki new-page --type <yourtype>`
-  (add it to `[wiki].extra_types` in `.llm-wiki.toml` so lint accepts it).
+- **Add a page type:** describe it here under "Page types" and use `llm-wiki new-page --type <yourtype>`.
+  (A future version will let `lint` accept custom types via `[wiki].extra_types` in `.llm-wiki.toml`.)
 - **Change the stale threshold:** set `stale_days` in `.llm-wiki.toml`.
 - **Change conventions:** edit the rules above; the CLI enforces structure, this file guides judgement.

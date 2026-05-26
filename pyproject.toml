@@ -21,6 +21,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llm_wiki"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"src/llm_wiki/templates" = "llm_wiki/templates"

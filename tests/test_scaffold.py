@@ -42,6 +42,23 @@ def test_init_root_mode_places_files_at_root(project: Path):
     assert not (project / "wiki").exists()
 
 
+def test_init_root_mode_preserves_existing_gitignore(project: Path):
+    gi = project / ".gitignore"
+    gi.write_text("node_modules/\n*.log\n")
+    init_wiki(project, target="generic", root_mode=True)
+    text = gi.read_text()
+    assert "node_modules/" in text  # user rules preserved
+    assert "*.log" in text
+    assert ".index/" in text  # our rule added
+    assert text.count(".index/") == 1  # not duplicated on content
+
+
+def test_init_root_mode_gitignore_not_duplicated_on_reinit(project: Path):
+    init_wiki(project, target="generic", root_mode=True)
+    init_wiki(project, target="generic", root_mode=True, force=True)
+    assert (project / ".gitignore").read_text().count(".index/") == 1
+
+
 def test_reinit_is_idempotent_and_preserves_log(project: Path):
     init_wiki(project, target="claude")
     log_before = (project / "wiki" / "log.md").read_text()

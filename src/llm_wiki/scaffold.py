@@ -22,6 +22,22 @@ def _write_if_absent(path: Path, content: str) -> None:
         path.write_text(content, encoding="utf-8")
 
 
+def _ensure_gitignore_line(path: Path, line: str) -> None:
+    """Ensure `line` is present in a .gitignore, preserving any existing content.
+
+    Critical for --root mode, where the .gitignore is the project's own file and
+    must never be clobbered.
+    """
+    if not path.exists():
+        path.write_text(line + "\n", encoding="utf-8")
+        return
+    existing = path.read_text(encoding="utf-8")
+    if line in {ln.strip() for ln in existing.splitlines()}:
+        return
+    sep = "" if existing == "" or existing.endswith("\n") else "\n"
+    path.write_text(existing + sep + line + "\n", encoding="utf-8")
+
+
 def _write_managed_block(project_root: Path, cfg: WikiConfig, root_mode: bool) -> None:
     wiki_rel = "" if root_mode else "wiki/"
     block = render_block(cfg.target, wiki_rel)
@@ -56,7 +72,7 @@ def init_wiki(
     cfg = WikiConfig(root=wiki_root, target=target)
     cfgmod.write_config(cfg)
     (wiki_root / "SCHEMA.md").write_text(load_template("SCHEMA.md"), encoding="utf-8")
-    (wiki_root / ".gitignore").write_text(".index/\n", encoding="utf-8")
+    _ensure_gitignore_line(wiki_root / ".gitignore", ".index/")
     _write_if_absent(wiki_root / "index.md", "# Index\n\n_No pages yet._\n")
     _write_if_absent(
         wiki_root / "log.md", f"# Log\n\n## [{today()}] init | wiki initialized\n"
