@@ -31,7 +31,7 @@ def test_build_graph_relations_and_skips_unknown_targets(wiki_cfg: WikiConfig):
     a.write_text(dump(fm, body))
     g = build_graph(wiki_cfg)
     assert g.has_edge("a", "b")
-    assert g.edges["a", "b"]["predicate"] == "uses"
+    assert "uses" in g.edges["a", "b"]["predicates"]
     assert "ghost" not in g.nodes  # unknown target skipped
 
 
@@ -70,10 +70,31 @@ def test_stats_counts(wiki_cfg: WikiConfig):
     new_page(wiki_cfg, type="entity", title="A")
     new_page(wiki_cfg, type="concept", title="B")
     _link(wiki_cfg, "a", "b")
-    s = stats(wiki_cfg and build_graph(wiki_cfg))
+    s = stats(build_graph(wiki_cfg))
     assert s["nodes"] == 2
     assert s["edges"] == 1
     assert s["by_type"] == {"entity": 1, "concept": 1}
+
+
+def test_multiple_predicates_between_same_pair_preserved(wiki_cfg: WikiConfig):
+    a = new_page(wiki_cfg, type="concept", title="A")
+    new_page(wiki_cfg, type="concept", title="B")
+    fm, body = parse(a.read_text())
+    fm.relations = [{"predicate": "uses", "target": "b"}]
+    a.write_text(dump(fm, body + "\n[[b]]\n"))  # both a relation AND an inline link
+    g = build_graph(wiki_cfg)
+    assert {"links", "uses"} <= set(g.edges["a", "b"]["predicates"])
+    # the "links" relationship is still discoverable under a predicate filter
+    assert any(n["slug"] == "b" for n in neighbors(g, "a", predicate="links"))
+
+
+def test_self_links_do_not_create_self_loops(wiki_cfg: WikiConfig):
+    a = new_page(wiki_cfg, type="concept", title="A")
+    fm, body = parse(a.read_text())
+    a.write_text(dump(fm, body + "\n[[a]]\n"))
+    g = build_graph(wiki_cfg)
+    assert not g.has_edge("a", "a")
+    assert stats(g)["edges"] == 0
 
 
 def test_export_json_and_dot(wiki_cfg: WikiConfig):

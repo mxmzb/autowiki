@@ -27,8 +27,15 @@ def build_graph(cfg: WikiConfig) -> nx.DiGraph:
 
     def edge(src: str, raw, predicate: str) -> None:
         dst = str(raw).strip()
-        if dst and dst in g:  # skip edges to unknown targets (lint reports them)
-            g.add_edge(src, dst, predicate=predicate)
+        # skip self-edges and edges to unknown targets (lint reports broken targets)
+        if not dst or dst == src or dst not in g:
+            return
+        if g.has_edge(src, dst):
+            predicates = g.edges[src, dst]["predicates"]
+            if predicate not in predicates:
+                predicates.append(predicate)  # one edge per pair, all predicates kept
+        else:
+            g.add_edge(src, dst, predicates=[predicate])
 
     for slug, fm, body in parsed:
         for target in _LINK_RE.findall(body):
@@ -54,7 +61,7 @@ def neighbors(g: nx.DiGraph, slug: str, depth: int = 1, predicate: str | None = 
         raise KeyError(slug)
     adj: dict[str, set[str]] = {n: set() for n in g.nodes}
     for u, v, data in g.edges(data=True):
-        if predicate is None or data.get("predicate") == predicate:
+        if predicate is None or predicate in data.get("predicates", []):
             adj[u].add(v)
             adj[v].add(u)
 
@@ -122,8 +129,8 @@ def export(g: nx.DiGraph, fmt: str) -> str:
             label = str(data.get("title", node)).replace('"', "'")
             lines.append(f'  "{node}" [label="{label}"];')
         for u, v, data in g.edges(data=True):
-            predicate = str(data.get("predicate", "")).replace('"', "'")
-            lines.append(f'  "{u}" -> "{v}" [label="{predicate}"];')
+            label = ",".join(sorted(data.get("predicates", []))).replace('"', "'")
+            lines.append(f'  "{u}" -> "{v}" [label="{label}"];')
         lines.append("}")
         return "\n".join(lines) + "\n"
     raise ValueError(f"unknown export format: {fmt!r} (use 'json' or 'dot')")
