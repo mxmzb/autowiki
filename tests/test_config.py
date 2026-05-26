@@ -56,3 +56,12 @@ def test_extra_types_defaults_empty(tmp_path: Path):
     cfg = WikiConfig(root=tmp_path / "wiki")
     assert cfg.extra_types == []
     assert "recipe" not in cfg.allowed_types
+
+
+def test_find_wiki_root_finds_wiki_subdir_from_project_root(tmp_path: Path):
+    # Default layout: config lives in a wiki/ subdir; running a command from the
+    # project root must still locate it (not only by walking up).
+    proj = tmp_path / "proj"
+    (proj / "wiki").mkdir(parents=True)
+    (proj / "wiki" / CONFIG_NAME).write_text("[wiki]\nschema_version = 1\n")
+    assert find_wiki_root(proj) == proj / "wiki"

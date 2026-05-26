@@ -54,3 +54,14 @@ def test_add_url_fetch_error_leaves_inbox_clean(wiki_cfg: WikiConfig, monkeypatc
         add_source(wiki_cfg, "https://example.com/article")
     after = sorted(p.name for p in wiki_cfg.inbox_dir.iterdir())
     assert before == after  # nothing written on failure
+
+
+def test_add_source_unique_by_stem_across_extensions(wiki_cfg: WikiConfig, tmp_path: Path):
+    a = tmp_path / "article.txt"
+    a.write_text("one")
+    b = tmp_path / "article.md"
+    b.write_text("two")
+    id1 = add_source(wiki_cfg, str(a))
+    id2 = add_source(wiki_cfg, str(b))  # same derived id, different extension
+    assert id1 == id2 == "article"
+    assert len(list(wiki_cfg.inbox_dir.glob("article.*"))) == 1

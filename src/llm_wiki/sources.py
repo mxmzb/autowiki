@@ -42,9 +42,12 @@ def add_source(
     if not sid:
         raise ValueError(f"could not derive a source id from {src!r}; pass an explicit id")
 
+    # Idempotent / unique by stem across any extension: if a source with this id
+    # already exists (regardless of extension), return it without recopying.
+    for existing in cfg.inbox_dir.iterdir():
+        if existing.is_file() and existing.stem == sid:
+            return sid
     target = cfg.inbox_dir / f"{sid}{ext}"
-    if target.exists():
-        return sid
 
     if _is_url(src):
         try:

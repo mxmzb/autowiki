@@ -40,6 +40,40 @@ class PageFrontmatter:
 
 _FIELDS = {f.name for f in dataclasses.fields(PageFrontmatter)}
 
+# Field-shape groups used to coerce hand-edited frontmatter into safe types so
+# downstream consumers (lint/index/search) never crash on a malformed page.
+_STR_LIST_FIELDS = (
+    "tags",
+    "aliases",
+    "sources",
+    "related",
+    "supersedes",
+    "superseded_by",
+    "contradicts",
+)
+_DICT_LIST_FIELDS = ("entities", "relations")
+_STR_FIELDS = ("title", "type", "created", "updated", "slug", "summary", "status", "tier")
+
+
+def _coerce_shapes(data: dict) -> dict:
+    out = dict(data)
+    for key in _STR_LIST_FIELDS:
+        if key in out:
+            value = out[key]
+            if isinstance(value, list):
+                out[key] = [str(item) for item in value]
+            elif value is None:
+                out[key] = []
+            else:
+                out[key] = [str(value)]
+    for key in _DICT_LIST_FIELDS:
+        if key in out and not isinstance(out[key], list):
+            out[key] = []
+    for key in _STR_FIELDS:
+        if key in out and out[key] is not None and not isinstance(out[key], str):
+            out[key] = str(out[key])
+    return out
+
 
 def today() -> str:
     return dt.date.today().isoformat()
@@ -51,7 +85,7 @@ def parse(text: str) -> tuple[PageFrontmatter, str]:
     _, fm_block, body = text.split(FM_DELIM, 2)
     data = yaml.safe_load(fm_block) or {}
     known = {k: v for k, v in data.items() if k in _FIELDS}
-    return PageFrontmatter(**known), body.lstrip("\n")
+    return PageFrontmatter(**_coerce_shapes(known)), body.lstrip("\n")
 
 
 def dump(fm: PageFrontmatter, body: str) -> str:

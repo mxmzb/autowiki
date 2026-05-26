@@ -72,3 +72,14 @@ def test_contradiction_is_info_level(wiki_cfg: WikiConfig):
     fm.contradicts = ["a"]
     p.write_text(dump(fm, body))
     assert any(i.code == "contradiction" and i.level == "info" for i in run_lint(wiki_cfg))
+
+
+def test_lint_does_not_crash_on_shape_malformed_page(wiki_cfg: WikiConfig):
+    # YAML-valid but wrong-shaped frontmatter must not crash lint.
+    (wiki_cfg.pages_dir / "weird.md").write_text(
+        "---\ntitle: Weird\ntype: note\ncreated: '2026-01-01'\n"
+        "updated: '2026-01-01'\nrelated: 7\nsummary: 99\n---\nbody\n"
+    )
+    issues = run_lint(wiki_cfg)  # must not raise
+    # the scalar `related: 7` is coerced to ["7"], surfacing as a broken link
+    assert any(i.code == "broken_link" for i in issues)

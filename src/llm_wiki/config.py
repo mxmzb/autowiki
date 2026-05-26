@@ -54,10 +54,18 @@ class WikiConfig:
 
 
 def find_wiki_root(start: Path) -> Path | None:
+    """Locate a wiki root from `start`, walking up.
+
+    At each level, `d` itself may be the wiki root (root layout), or it may be a
+    project containing a `wiki/` subdir (default layout) — so running a command
+    from the project root finds the wiki without needing to cd into it.
+    """
     start = start.resolve()
     for d in (start, *start.parents):
         if (d / CONFIG_NAME).is_file():
             return d
+        if (d / "wiki" / CONFIG_NAME).is_file():
+            return d / "wiki"
     return None
 
 

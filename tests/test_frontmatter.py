@@ -71,3 +71,23 @@ def test_validate_accepts_custom_type_via_allowed_types():
     assert any("recipe" in e for e in validate(fm))
     # ...but passing allowed_types accepts it.
     assert validate(fm, allowed_types=(*PAGE_TYPES, "recipe")) == []
+
+
+def test_parse_coerces_malformed_field_shapes():
+    # Hand-edited pages may put a scalar where a list/str is expected. parse must
+    # coerce to safe shapes so downstream consumers (lint/index/search) never crash.
+    text = (
+        "---\n"
+        "title: X\n"
+        "type: note\n"
+        "created: '2026-01-01'\n"
+        "updated: '2026-01-01'\n"
+        "related: 7\n"      # scalar where a list is expected
+        "tags: hello\n"     # bare string where a list is expected
+        "summary: 123\n"    # number where a string is expected
+        "---\nbody\n"
+    )
+    fm, _ = parse(text)
+    assert fm.related == ["7"]
+    assert fm.tags == ["hello"]
+    assert fm.summary == "123"
