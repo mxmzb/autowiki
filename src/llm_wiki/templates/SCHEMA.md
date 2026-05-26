@@ -72,6 +72,16 @@ extra, search is keyword-only — everything still works.
   drops out of `index.md` but stays searchable and points to its replacement.
 - Run `llm-wiki review` to surface pages that have decayed or are past their `review_by` date.
 
+## Staying current
+At the start of a session (the SessionStart hook surfaces what's pending), keep the wiki fresh:
+- `llm-wiki sources --pending` lists inbox sources not yet ingested — run the **Ingest a source**
+  workflow on each.
+- `llm-wiki review` surfaces decayed/overdue pages — refresh or `supersede` them.
+- `llm-wiki maintain` rebuilds the index and reports lint/review/pending/quality in one pass.
+- `llm-wiki quality` shows the weakest pages (missing summaries, sources, or links).
+
+The CLI never calls an LLM — these commands just tell you what needs attention; you do the reading and writing.
+
 ## Customizing your wiki
 This file is yours to edit. To adapt the wiki to your use case:
 - **Add a page type:** describe it here under "Page types", add it to `[wiki].extra_types` in
