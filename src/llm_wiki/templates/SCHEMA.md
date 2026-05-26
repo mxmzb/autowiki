@@ -63,6 +63,15 @@ If the embeddings extra is installed (`pip install 'llm-wiki[embeddings]'`), run
 Use `llm-wiki similar <slug>` to find near-duplicate pages **before** creating a new one. Without the
 extra, search is keyword-only — everything still works.
 
+## Memory lifecycle
+- Set `confidence` (0–1) on facts — well-established ones decay slower.
+- Mark timeless pages `evergreen: true` (or `llm-wiki new-page --evergreen`): they never decay or go stale.
+- Use `tier` to reflect consolidation: `working` (raw notes) → `episodic` (session summaries) →
+  `semantic` (established facts) → `procedural` (workflows). Lower tiers decay faster.
+- **Supersede, don't delete:** `llm-wiki supersede <old> <new>` marks the old page superseded — it
+  drops out of `index.md` but stays searchable and points to its replacement.
+- Run `llm-wiki review` to surface pages that have decayed or are past their `review_by` date.
+
 ## Customizing your wiki
 This file is yours to edit. To adapt the wiki to your use case:
 - **Add a page type:** describe it here under "Page types", add it to `[wiki].extra_types` in
