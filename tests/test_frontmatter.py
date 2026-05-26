@@ -91,3 +91,20 @@ def test_parse_coerces_malformed_field_shapes():
     assert fm.related == ["7"]
     assert fm.tags == ["hello"]
     assert fm.summary == "123"
+
+
+def test_parse_coerces_relations_entries():
+    text = (
+        "---\n"
+        "title: X\n"
+        "type: note\n"
+        "created: '2026-01-01'\n"
+        "updated: '2026-01-01'\n"
+        "relations:\n"
+        "- predicate: uses\n"
+        "  target: 7\n"      # non-str target -> coerced
+        "- not-a-dict\n"     # malformed entry -> dropped
+        "---\nbody\n"
+    )
+    fm, _ = parse(text)
+    assert fm.relations == [{"predicate": "uses", "target": "7"}]

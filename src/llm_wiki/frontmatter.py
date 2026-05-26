@@ -67,8 +67,22 @@ def _coerce_shapes(data: dict) -> dict:
             else:
                 out[key] = [str(value)]
     for key in _DICT_LIST_FIELDS:
-        if key in out and not isinstance(out[key], list):
+        if key not in out:
+            continue
+        value = out[key]
+        if not isinstance(value, list):
             out[key] = []
+            continue
+        cleaned = []
+        for item in value:
+            if not isinstance(item, dict):
+                continue  # drop malformed (non-dict) entries
+            entry = dict(item)
+            for sub in ("target", "predicate"):
+                if entry.get(sub) is not None:
+                    entry[sub] = str(entry[sub])
+            cleaned.append(entry)
+        out[key] = cleaned
     for key in _STR_FIELDS:
         if key in out and out[key] is not None and not isinstance(out[key], str):
             out[key] = str(out[key])

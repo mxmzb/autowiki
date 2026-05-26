@@ -83,3 +83,20 @@ def test_lint_does_not_crash_on_shape_malformed_page(wiki_cfg: WikiConfig):
     issues = run_lint(wiki_cfg)  # must not raise
     # the scalar `related: 7` is coerced to ["7"], surfacing as a broken link
     assert any(i.code == "broken_link" for i in issues)
+
+
+def test_broken_relations_target_detected(wiki_cfg: WikiConfig):
+    p = new_page(wiki_cfg, type="concept", title="A")
+    fm, body = parse(p.read_text())
+    fm.relations = [{"predicate": "uses", "target": "ghost"}]
+    p.write_text(dump(fm, body))
+    assert "broken_link" in _codes(run_lint(wiki_cfg))
+
+
+def test_resolving_relations_target_has_no_broken_link(wiki_cfg: WikiConfig):
+    new_page(wiki_cfg, type="concept", title="Target")  # slug "target"
+    p = new_page(wiki_cfg, type="concept", title="A")
+    fm, body = parse(p.read_text())
+    fm.relations = [{"predicate": "uses", "target": "target"}]
+    p.write_text(dump(fm, body))
+    assert not any(i.code == "broken_link" for i in run_lint(wiki_cfg))

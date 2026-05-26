@@ -68,6 +68,7 @@ def run_lint(cfg: WikiConfig) -> list[LintIssue]:
     for slug, fm, body in parsed:
         targets = set(_LINK_RE.findall(body))
         targets |= set(fm.related) | set(fm.supersedes) | set(fm.superseded_by) | set(fm.contradicts)
+        targets |= {str(rel["target"]) for rel in fm.relations if isinstance(rel, dict) and rel.get("target")}
         for raw in targets:
             target = raw.strip()
             if not target:
