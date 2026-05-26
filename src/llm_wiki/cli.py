@@ -22,6 +22,7 @@ from .lint import fix as lint_fix
 from .lint import run_lint
 from .log import append_log
 from .pages import new_page
+from .quality import quality_report
 from .scaffold import init_wiki, project_root_of, resolve_target
 from .search import search as search_pages
 from .sources import add_source, source_status
@@ -438,6 +439,26 @@ def similar_cmd(
         return
     for s, sc in results:
         typer.echo(f"{sc:.3f}  {s}")
+
+
+@app.command("quality")
+def quality_cmd(
+    limit: int = typer.Option(None, "--limit", help="Show only the N weakest pages."),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Score pages by deterministic quality signals (weakest first)."""
+    cfg = _resolve_cfg(wiki)
+    items = quality_report(cfg, limit=limit)
+    if json_out:
+        typer.echo(json.dumps(items))
+        return
+    if not items:
+        typer.echo("No pages.")
+        return
+    for d in items:
+        missing = f"  (missing: {', '.join(d['missing'])})" if d["missing"] else ""
+        typer.echo(f"{d['score']:.2f}  {d['slug']}{missing}")
 
 
 @app.command("sources")
