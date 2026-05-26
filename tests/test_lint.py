@@ -100,3 +100,29 @@ def test_resolving_relations_target_has_no_broken_link(wiki_cfg: WikiConfig):
     fm.relations = [{"predicate": "uses", "target": "target"}]
     p.write_text(dump(fm, body))
     assert not any(i.code == "broken_link" for i in run_lint(wiki_cfg))
+
+
+def test_evergreen_page_not_flagged_stale(wiki_cfg: WikiConfig):
+    p = new_page(wiki_cfg, type="note", title="Timeless", evergreen=True)
+    fm, body = parse(p.read_text())
+    fm.review_by = "2000-01-01"  # long past
+    p.write_text(dump(fm, body))
+    assert not any(i.code == "stale" for i in run_lint(wiki_cfg))
+
+
+def test_supersession_inconsistency_detected(wiki_cfg: WikiConfig):
+    a = new_page(wiki_cfg, type="concept", title="A")
+    new_page(wiki_cfg, type="concept", title="B")
+    fm, body = parse(a.read_text())
+    fm.supersedes = ["b"]  # but B has no superseded_by: [a]
+    a.write_text(dump(fm, body))
+    assert "supersession_inconsistent" in _codes(run_lint(wiki_cfg))
+
+
+def test_archived_status_warning(wiki_cfg: WikiConfig):
+    new_page(wiki_cfg, type="concept", title="Newer")  # so the target resolves
+    a = new_page(wiki_cfg, type="concept", title="A")
+    fm, body = parse(a.read_text())
+    fm.superseded_by = ["newer"]  # but status left active
+    a.write_text(dump(fm, body))
+    assert "archived_status" in _codes(run_lint(wiki_cfg))

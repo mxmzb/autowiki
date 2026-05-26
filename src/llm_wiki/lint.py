@@ -91,9 +91,31 @@ def run_lint(cfg: WikiConfig) -> list[LintIssue]:
             if sid not in inbox_ids:
                 issues.append(LintIssue("error", "missing_source", slug, f"source not in inbox: {sid}"))
 
-    # Stale (review_by passed, or not updated within stale_days).
+    # Supersession consistency + archived-status (lifecycle).
+    fm_by_slug = {slug: fm for slug, fm, _ in parsed}
+    for slug, fm, _body in parsed:
+        for target in fm.supersedes:
+            t = str(target).strip()
+            if t in fm_by_slug and slug not in fm_by_slug[t].superseded_by:
+                issues.append(
+                    LintIssue("error", "supersession_inconsistent", slug, f"supersedes {t}, but {t} lacks superseded_by: {slug}")
+                )
+        for target in fm.superseded_by:
+            t = str(target).strip()
+            if t in fm_by_slug and slug not in fm_by_slug[t].supersedes:
+                issues.append(
+                    LintIssue("error", "supersession_inconsistent", slug, f"superseded_by {t}, but {t} lacks supersedes: {slug}")
+                )
+        if fm.superseded_by and fm.status != "superseded":
+            issues.append(
+                LintIssue("warning", "archived_status", slug, "has superseded_by but status is not 'superseded'")
+            )
+
+    # Stale (review_by passed, or not updated within stale_days). Evergreen pages never go stale.
     today_s = today()
     for slug, fm, _body in parsed:
+        if fm.evergreen:
+            continue
         if fm.review_by and str(fm.review_by) < today_s:
             issues.append(LintIssue("warning", "stale", slug, f"review_by {fm.review_by} has passed"))
         elif fm.updated and _days_old(fm.updated) > cfg.stale_days:

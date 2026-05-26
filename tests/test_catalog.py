@@ -1,6 +1,19 @@
 from llm_wiki.catalog import build_index, index_is_current, write_index
 from llm_wiki.config import WikiConfig
+from llm_wiki.frontmatter import dump, parse
 from llm_wiki.pages import new_page
+
+
+def test_archived_pages_excluded_from_index(wiki_cfg: WikiConfig):
+    new_page(wiki_cfg, type="concept", title="Current", summary="here")
+    p = new_page(wiki_cfg, type="concept", title="Old", summary="gone")
+    fm, body = parse(p.read_text())
+    fm.status = "superseded"
+    p.write_text(dump(fm, body))
+    out = build_index(wiki_cfg)
+    assert "[[current]]" in out
+    assert "[[old]]" not in out
+    assert "1 archived" in out
 
 
 def test_empty_wiki_index_is_seed_and_current(wiki_cfg: WikiConfig):
