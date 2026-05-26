@@ -33,3 +33,18 @@ def test_upgrade_does_not_touch_content(wiki_cfg: WikiConfig):
     fm, _ = load_page(p)
     assert fm.title == "Keep Me"
     assert fm.summary == "body matters"
+
+
+def test_upgrade_and_doctor_work_in_root_layout(tmp_path):
+    from llm_wiki.doctor import doctor
+    from llm_wiki.scaffold import init_wiki
+
+    proj = tmp_path / "kb"
+    proj.mkdir()
+    cfg, _ = init_wiki(proj, target="generic", root_mode=True)
+    upgrade(cfg)
+    # managed block refreshed at the project root, not a parent dir
+    assert (proj / "AGENTS.md").exists()
+    findings = doctor(cfg)
+    assert not any(level == "error" for level, _ in findings)
+    assert any("managed block present" in msg for _level, msg in findings)

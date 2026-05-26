@@ -2,7 +2,7 @@ from pathlib import Path
 
 from llm_wiki.config import CONFIG_NAME, load_config
 from llm_wiki.managed_block import BEGIN
-from llm_wiki.scaffold import init_wiki
+from llm_wiki.scaffold import init_wiki, project_root_of
 
 
 def test_init_creates_expected_tree(project: Path):
@@ -57,6 +57,24 @@ def test_init_root_mode_gitignore_not_duplicated_on_reinit(project: Path):
     init_wiki(project, target="generic", root_mode=True)
     init_wiki(project, target="generic", root_mode=True, force=True)
     assert (project / ".gitignore").read_text().count(".index/") == 1
+
+
+def test_project_root_of_uses_persisted_layout_not_dirname(tmp_path: Path):
+    # A --root wiki whose project dir is literally named "wiki" must still be
+    # treated as root layout (layout is persisted, not inferred from the name).
+    proj = tmp_path / "wiki"
+    proj.mkdir()
+    cfg, _ = init_wiki(proj, target="generic", root_mode=True)
+    root, root_mode = project_root_of(cfg)
+    assert root_mode is True
+    assert root == proj
+
+
+def test_project_root_of_default_layout(project: Path):
+    cfg, _ = init_wiki(project, target="generic")
+    root, root_mode = project_root_of(cfg)
+    assert root_mode is False
+    assert root == project
 
 
 def test_reinit_is_idempotent_and_preserves_log(project: Path):

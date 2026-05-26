@@ -103,7 +103,10 @@ def run_hook(event: str, stdin_text: str) -> tuple[int, str]:
         data = json.loads(stdin_text) if stdin_text.strip() else {}
     except json.JSONDecodeError:
         return (0, "")
-    file_path = (data.get("tool_input") or {}).get("file_path")
+    if not isinstance(data, dict):
+        return (0, "")  # non-object payload (array/scalar/null) — never block
+    tool_input = data.get("tool_input")
+    file_path = tool_input.get("file_path") if isinstance(tool_input, dict) else None
     if not file_path:
         return (0, "")
 

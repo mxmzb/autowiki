@@ -63,3 +63,13 @@ def test_run_hook_ignores_junk(wiki_cfg: WikiConfig):
     assert run_hook("pre-edit", "not json") == (0, "")
     assert run_hook("pre-edit", "") == (0, "")
     assert run_hook("post-edit", json.dumps({"tool_input": {}})) == (0, "")
+
+
+def test_run_hook_never_raises_on_non_object_payloads(wiki_cfg: WikiConfig):
+    # Valid JSON that isn't an object, or whose tool_input isn't a dict, must
+    # never raise — the hook would crash Claude's PreToolUse otherwise.
+    for payload in ("[]", "42", '"str"', "true", "null",
+                    '{"tool_input": "x"}', '{"tool_input": [1, 2]}',
+                    '{"tool_input": null}'):
+        assert run_hook("pre-edit", payload) == (0, "")
+        assert run_hook("post-edit", payload) == (0, "")

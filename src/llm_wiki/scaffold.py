@@ -12,15 +12,16 @@ from .managed_block import render_block, upsert_block
 _SLASH_COMMANDS = ("wiki-ingest", "wiki-query", "wiki-lint")
 
 
-def project_root_of(cfg: "WikiConfig") -> tuple[Path, bool]:
+def project_root_of(cfg: WikiConfig) -> tuple[Path, bool]:
     """Return (project_root, root_mode) for a wiki config.
 
-    Default layout: cfg.root is <project>/wiki → project_root is its parent.
-    Root layout: cfg.root is the project itself.
+    Uses the persisted `root_layout` flag (not the directory name), so a --root
+    wiki in a directory literally named "wiki" is still resolved correctly.
+    Root layout: cfg.root is the project itself. Default layout: project is the parent.
     """
-    if cfg.root.name == "wiki":
-        return cfg.root.parent, False
-    return cfg.root, True
+    if cfg.root_layout:
+        return cfg.root, True
+    return cfg.root.parent, False
 
 
 def _touch(path: Path) -> None:
@@ -84,7 +85,7 @@ def init_wiki(
     _touch(wiki_root / "inbox" / ".gitkeep")
     _touch(wiki_root / "pages" / ".gitkeep")
 
-    cfg = WikiConfig(root=wiki_root, target=target)
+    cfg = WikiConfig(root=wiki_root, target=target, root_layout=root_mode)
     cfgmod.write_config(cfg)
     (wiki_root / "SCHEMA.md").write_text(load_template("SCHEMA.md"), encoding="utf-8")
     _ensure_gitignore_line(wiki_root / ".gitignore", ".index/")

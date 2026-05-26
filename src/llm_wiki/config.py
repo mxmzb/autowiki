@@ -18,6 +18,7 @@ class WikiConfig:
     embedding_provider: str = "local"
     stale_days: int = 365
     extra_types: list[str] = field(default_factory=list)
+    root_layout: bool = False  # True when the wiki lives at the project root (--root)
 
     @property
     def allowed_types(self) -> tuple[str, ...]:
@@ -79,6 +80,7 @@ def load_config(root: Path) -> WikiConfig:
         embedding_provider=wiki.get("embedding_provider", "local"),
         stale_days=wiki.get("stale_days", 365),
         extra_types=list(wiki.get("extra_types", [])),
+        root_layout=bool(wiki.get("root_layout", False)),
     )
 
 
@@ -91,6 +93,7 @@ def dump_config(cfg: WikiConfig) -> str:
         f'embedding_provider = "{cfg.embedding_provider}"\n'
         f"stale_days = {cfg.stale_days}\n"
         f"extra_types = [{extra}]\n"
+        f"root_layout = {str(cfg.root_layout).lower()}\n"
     )
 
 
