@@ -10,6 +10,7 @@ import typer
 from . import __version__
 from .catalog import index_is_current, write_index
 from .config import SCHEMA_VERSION, WikiConfig, find_wiki_root, load_config
+from . import graph as graphlib
 from .doctor import doctor as doctor_check
 from .doctor import status as status_report
 from .hooks import install_hooks, run_hook, uninstall_hooks
@@ -273,6 +274,102 @@ def upgrade_cmd(
         f"{result['commands']} command(s), managed block{extras}; "
         f"migrated {result['pages_migrated']} page(s)."
     )
+
+
+graph_app = typer.Typer(help="Query the knowledge graph.", no_args_is_help=True)
+app.add_typer(graph_app, name="graph")
+
+
+@graph_app.command("neighbors")
+def graph_neighbors_cmd(
+    slug: str = typer.Argument(..., help="Page slug."),
+    depth: int = typer.Option(1, "--depth"),
+    predicate: str = typer.Option(None, "--predicate", help="Only traverse this edge type."),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki"),
+) -> None:
+    """Pages connected to SLUG (undirected, within --depth)."""
+    g = graphlib.build_graph(_resolve_cfg(wiki))
+    try:
+        results = graphlib.neighbors(g, slug, depth=depth, predicate=predicate)
+    except KeyError:
+        typer.echo(f"page not found: {slug}", err=True)
+        raise typer.Exit(1)
+    if json_out:
+        typer.echo(json.dumps(results))
+        return
+    if not results:
+        typer.echo("No neighbors.")
+        return
+    for r in results:
+        typer.echo(f"{r['distance']}  {r['slug']}  —  {r['title']}")
+
+
+@graph_app.command("path")
+def graph_path_cmd(
+    a: str = typer.Argument(...),
+    b: str = typer.Argument(...),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki"),
+) -> None:
+    """Shortest connection trail between two pages."""
+    g = graphlib.build_graph(_resolve_cfg(wiki))
+    result = graphlib.path(g, a, b)
+    if json_out:
+        typer.echo(json.dumps(result))
+        return
+    if result is None:
+        typer.echo(f"No path between {a} and {b}.")
+        raise typer.Exit(1)
+    typer.echo(" -> ".join(result))
+
+
+@graph_app.command("hubs")
+def graph_hubs_cmd(
+    limit: int = typer.Option(10, "--limit"),
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki"),
+) -> None:
+    """Most-connected pages."""
+    g = graphlib.build_graph(_resolve_cfg(wiki))
+    results = graphlib.hubs(g, limit=limit)
+    if json_out:
+        typer.echo(json.dumps(results))
+        return
+    if not results:
+        typer.echo("No pages.")
+        return
+    for r in results:
+        typer.echo(f"{r['degree']:>3}  {r['slug']}  —  {r['title']}")
+
+
+@graph_app.command("stats")
+def graph_stats_cmd(
+    json_out: bool = typer.Option(False, "--json"),
+    wiki: Path = typer.Option(Path("."), "--wiki"),
+) -> None:
+    """Graph size and composition."""
+    s = graphlib.stats(graphlib.build_graph(_resolve_cfg(wiki)))
+    if json_out:
+        typer.echo(json.dumps(s))
+        return
+    typer.echo(f"Nodes: {s['nodes']}  Edges: {s['edges']}  Isolated: {s['isolated']}")
+    for page_type, count in sorted(s["by_type"].items()):
+        typer.echo(f"  {page_type}: {count}")
+
+
+@graph_app.command("export")
+def graph_export_cmd(
+    format: str = typer.Option("json", "--format", help="json|dot"),
+    wiki: Path = typer.Option(Path("."), "--wiki"),
+) -> None:
+    """Export the graph as JSON (node-link) or Graphviz DOT."""
+    g = graphlib.build_graph(_resolve_cfg(wiki))
+    try:
+        typer.echo(graphlib.export(g, format))
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
 
 
 def main() -> None:
