@@ -30,10 +30,16 @@ llm-wiki lint --fix                  # structural health check (orphans, broken 
 llm-wiki graph neighbors <slug>      # explore the knowledge graph (also: path / hubs / stats / export)
 llm-wiki supersede <old> <new>       # mark old superseded by new (kept, but dropped from the catalog)
 llm-wiki review                      # surface pages that have decayed or are past review_by
+llm-wiki sources --pending           # inbox sources not yet ingested into a page
+llm-wiki quality                     # weakest pages (missing summaries, sources, links)
+llm-wiki maintain                    # one-shot pass: rebuild index + lint/review/pending/quality report
 llm-wiki status                      # page counts, status/tier breakdown, review-due, lint summary
 llm-wiki doctor                      # health/setup check
 llm-wiki upgrade                     # refresh schema/commands/block to the installed version
 ```
+
+With `--hooks`, a SessionStart hook greets each Claude session with what needs attention (pending
+sources, pages due for review, lint errors) so the in-session agent can act on it.
 
 **Semantic search (optional):** `pip install 'llm-wiki[embeddings]'`, then `llm-wiki embed` to build a
 local vector index — `search` then fuses keyword + semantic results, and `llm-wiki similar <slug>` finds
@@ -58,7 +64,9 @@ wiki/
 
 ## Status
 
-Phases 1–4 are complete: the core wiki + CLI, the knowledge graph, hybrid (keyword + semantic) search,
-and the memory lifecycle (confidence/decay with evergreen pages, supersession, `review`). See
-`docs/superpowers/specs/` and `docs/superpowers/plans/` for the design and the remaining roadmap
-(Phase 5 automation/quality).
+All five phases are complete: the core wiki + CLI, the knowledge graph, hybrid (keyword + semantic)
+search, the memory lifecycle (confidence/decay with evergreen pages, supersession, `review`), and
+automation/quality (source-ingestion tracking, `quality`, `maintain`, the proactive SessionStart hook).
+The CLI is fully deterministic — the in-session agent does all semantic work. See
+`docs/superpowers/specs/` and `docs/superpowers/plans/` for the design. Possible follow-ons: shipped
+`--template` use-case templates, an optional headless `--llm` driver for unattended cron, and a PyPI release.
