@@ -93,6 +93,12 @@ def test_run_hook_never_raises_on_non_object_payloads(wiki_cfg: WikiConfig):
     # never raise — the hook would crash Claude's PreToolUse otherwise.
     for payload in ("[]", "42", '"str"', "true", "null",
                     '{"tool_input": "x"}', '{"tool_input": [1, 2]}',
-                    '{"tool_input": null}'):
+                    '{"tool_input": null}',
+                    '{"tool_input": {"file_path": 123}}'):  # non-string file_path
         assert run_hook("pre-edit", payload) == (0, "")
         assert run_hook("post-edit", payload) == (0, "")
+
+
+def test_session_start_survives_non_string_cwd(wiki_cfg: WikiConfig):
+    # a non-string cwd must not raise (falls back to cwd, never blocks)
+    assert run_hook("session-start", json.dumps({"cwd": 123})) == (0, "")

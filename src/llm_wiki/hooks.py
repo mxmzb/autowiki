@@ -133,14 +133,15 @@ def run_hook(event: str, stdin_text: str) -> tuple[int, str]:
 
     if event == "session-start":
         cwd = data.get("cwd")
-        root = find_wiki_root(Path(cwd)) if cwd else find_wiki_root(Path.cwd())
+        start = Path(cwd) if isinstance(cwd, str) and cwd else Path.cwd()
+        root = find_wiki_root(start)
         if root is None:
             return (0, "")
         return (0, _session_summary(load_config(root)))
 
     tool_input = data.get("tool_input")
     file_path = tool_input.get("file_path") if isinstance(tool_input, dict) else None
-    if not file_path:
+    if not isinstance(file_path, str) or not file_path:
         return (0, "")
 
     fp = Path(file_path).resolve()
