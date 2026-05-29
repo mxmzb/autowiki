@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from llm_wiki.config import CONFIG_NAME, load_config
+from llm_wiki.hooks import hooks_installed
 from llm_wiki.managed_block import BEGIN
 from llm_wiki.scaffold import init_wiki, project_root_of
 
@@ -75,6 +76,41 @@ def test_project_root_of_default_layout(project: Path):
     root, root_mode = project_root_of(cfg)
     assert root_mode is False
     assert root == project
+
+
+def test_block_written_to_all_existing_provider_files(project: Path):
+    # Both provider instruction files already exist as real files → keep them in
+    # sync: the managed block lands in both, regardless of chosen target.
+    (project / "AGENTS.md").write_text("# Agents\n")
+    (project / "CLAUDE.md").write_text("# Claude\n")
+    init_wiki(project, target="claude")
+    assert BEGIN in (project / "CLAUDE.md").read_text()
+    assert BEGIN in (project / "AGENTS.md").read_text()
+
+
+def test_symlinked_provider_files_get_block_once(project: Path):
+    # CLAUDE.md -> AGENTS.md symlink: the block is written once to the canonical
+    # file and the symlink is preserved (not clobbered into a regular file).
+    (project / "AGENTS.md").write_text("# Canonical\n")
+    (project / "CLAUDE.md").symlink_to("AGENTS.md")
+    init_wiki(project, target="claude")
+    assert (project / "CLAUDE.md").is_symlink()
+    assert (project / "AGENTS.md").read_text().count(BEGIN) == 1
+
+
+def test_generic_target_installs_commands_when_claude_dir_present(project: Path):
+    # A Claude harness (.claude/) present means slash commands are useful even
+    # though the managed block lives in AGENTS.md.
+    (project / ".claude").mkdir()
+    init_wiki(project, target="generic")
+    assert (project / ".claude" / "commands" / "wiki-ingest.md").exists()
+
+
+def test_hooks_install_on_generic_target_when_requested(project: Path):
+    # --hooks is an explicit opt-in; honor it regardless of target (previously
+    # silently ignored unless target was claude).
+    init_wiki(project, target="generic", with_hooks=True)
+    assert hooks_installed(project)
 
 
 def test_reinit_is_idempotent_and_preserves_log(project: Path):

@@ -21,7 +21,7 @@ from .lifecycle import supersede as lifecycle_supersede
 from .lint import fix as lint_fix
 from .lint import run_lint
 from .log import append_log
-from .pages import new_page
+from .pages import new_page, set_page_fields
 from .quality import quality_report
 from .scaffold import init_wiki, project_root_of, resolve_target
 from .search import search as search_pages
@@ -58,7 +58,7 @@ def init(
     ),
     yes: bool = typer.Option(False, "--yes", help="Non-interactive."),
     hooks: bool = typer.Option(
-        False, "--hooks", help="Install opt-in Claude hygiene hooks (claude target only)."
+        False, "--hooks", help="Install opt-in Claude hygiene hooks (any target)."
     ),
 ) -> None:
     """Initialize an LLM wiki in PATH (new or existing project)."""
@@ -130,6 +130,50 @@ def new_page_cmd(
             evergreen=evergreen,
         )
     except (ValueError, FileExistsError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
+    typer.echo(str(path))
+
+
+@app.command("set")
+def set_cmd(
+    slug: str = typer.Argument(..., help="Slug of the page to update."),
+    confidence: float = typer.Option(None, "--confidence", help="0.0–1.0"),
+    tier: str = typer.Option(None, "--tier", help="working|episodic|semantic|procedural"),
+    status: str = typer.Option(None, "--status", help="active|draft|deprecated|superseded"),
+    review_by: str = typer.Option(None, "--review-by", help="ISO date (YYYY-MM-DD)."),
+    evergreen: bool = typer.Option(None, "--evergreen/--no-evergreen", help="Exempt from decay."),
+    add_source: str = typer.Option("", "--add-source", help="Comma-separated source ids to add."),
+    add_related: str = typer.Option("", "--add-related", help="Comma-separated slugs to add."),
+    add_tag: str = typer.Option("", "--add-tag", help="Comma-separated tags to add."),
+    wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
+) -> None:
+    """Update lifecycle fields on a page's frontmatter (auto-bumps `updated`)."""
+    cfg = _resolve_cfg(wiki)
+    changes: dict = {}
+    if confidence is not None:
+        changes["confidence"] = confidence
+    if tier is not None:
+        changes["tier"] = tier
+    if status is not None:
+        changes["status"] = status
+    if review_by is not None:
+        changes["review_by"] = review_by
+    if evergreen is not None:
+        changes["evergreen"] = evergreen
+    try:
+        path = set_page_fields(
+            cfg,
+            slug,
+            add_sources=_csv(add_source),
+            add_related=_csv(add_related),
+            add_tags=_csv(add_tag),
+            **changes,
+        )
+    except FileNotFoundError:
+        typer.echo(f"page not found: {slug}", err=True)
+        raise typer.Exit(1)
+    except ValueError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1)
     typer.echo(str(path))

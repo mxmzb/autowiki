@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import json
-import re
 from collections import deque
 
 import networkx as nx
 
 from .config import WikiConfig
-from .pages import list_page_paths, load_page
-
-_LINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]*)?\]\]")
+from .pages import extract_links, list_page_paths, load_page
 
 
 def build_graph(cfg: WikiConfig) -> nx.DiGraph:
@@ -38,7 +35,7 @@ def build_graph(cfg: WikiConfig) -> nx.DiGraph:
             g.add_edge(src, dst, predicates=[predicate])
 
     for slug, fm, body in parsed:
-        for target in _LINK_RE.findall(body):
+        for target in extract_links(body):
             edge(slug, target, "links")
         for target in fm.related:
             edge(slug, target, "related")

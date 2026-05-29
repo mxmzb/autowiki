@@ -64,6 +64,9 @@ Use `llm-wiki similar <slug>` to find near-duplicate pages **before** creating a
 extra, search is keyword-only — everything still works.
 
 ## Memory lifecycle
+- Change frontmatter fields with `llm-wiki set <slug>` (e.g. `--confidence 0.8`, `--tier semantic`,
+  `--status`, `--review-by`, `--add-source`, `--add-related`, `--add-tag`) — it validates and bumps
+  `updated` for you. Prefer it over hand-editing YAML.
 - Set `confidence` (0–1) on facts — well-established ones decay slower.
 - Mark timeless pages `evergreen: true` (or `llm-wiki new-page --evergreen`): they never decay or go stale.
 - Use `tier` to reflect consolidation: `working` (raw notes) → `episodic` (session summaries) →

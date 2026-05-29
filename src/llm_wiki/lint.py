@@ -1,16 +1,13 @@
 from __future__ import annotations
 
 import datetime as dt
-import re
 from collections import Counter
 from dataclasses import dataclass
 
 from .catalog import index_is_current, write_index
 from .config import WikiConfig
 from .frontmatter import PageFrontmatter, dump, today, validate
-from .pages import list_page_paths, load_page
-
-_LINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]*)?\]\]")
+from .pages import extract_links, list_page_paths, load_page
 
 
 @dataclass
@@ -66,7 +63,7 @@ def run_lint(cfg: WikiConfig) -> list[LintIssue]:
     # Links (wiki-links in body + relational frontmatter) → broken + inbound set.
     inbound: set[str] = set()
     for slug, fm, body in parsed:
-        targets = set(_LINK_RE.findall(body))
+        targets = set(extract_links(body))
         targets |= set(fm.related) | set(fm.supersedes) | set(fm.superseded_by) | set(fm.contradicts)
         targets |= {str(rel["target"]) for rel in fm.relations if isinstance(rel, dict) and rel.get("target")}
         for raw in targets:

@@ -97,6 +97,17 @@ def test_self_links_do_not_create_self_loops(wiki_cfg: WikiConfig):
     assert stats(g)["edges"] == 0
 
 
+def test_links_in_code_are_not_edges(wiki_cfg: WikiConfig):
+    new_page(wiki_cfg, type="concept", title="A")
+    new_page(wiki_cfg, type="concept", title="B")
+    a = wiki_cfg.pages_dir / "a.md"
+    fm, body = parse(a.read_text())
+    # [[b]] only appears inside inline code — it must NOT create an edge.
+    a.write_text(dump(fm, body + "\nUse the `[[b]]` token literally.\n"))
+    g = build_graph(wiki_cfg)
+    assert not g.has_edge("a", "b")
+
+
 def test_export_json_and_dot(wiki_cfg: WikiConfig):
     new_page(wiki_cfg, type="concept", title="A")
     new_page(wiki_cfg, type="concept", title="B")

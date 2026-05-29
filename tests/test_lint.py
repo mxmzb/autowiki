@@ -126,3 +126,19 @@ def test_archived_status_warning(wiki_cfg: WikiConfig):
     fm.superseded_by = ["newer"]  # but status left active
     a.write_text(dump(fm, body))
     assert "archived_status" in _codes(run_lint(wiki_cfg))
+
+
+def test_wikilink_in_inline_code_is_not_a_link(wiki_cfg: WikiConfig):
+    # A Next.js optional-catch-all route in inline code must not be read as a wiki-link.
+    p = new_page(wiki_cfg, type="note", title="Doc")
+    fm, body = parse(p.read_text())
+    p.write_text(dump(fm, body + "\nThe `src/app/rpc/[[...rest]]/route.ts` handler.\n"))
+    assert not any(i.code == "broken_link" for i in run_lint(wiki_cfg))
+
+
+def test_wikilink_in_fenced_code_is_not_a_link(wiki_cfg: WikiConfig):
+    p = new_page(wiki_cfg, type="note", title="Doc2")
+    fm, body = parse(p.read_text())
+    fenced = "\n```ts\n// see [[some-route]] in app/[[...slug]]/page.tsx\n```\n"
+    p.write_text(dump(fm, body + fenced))
+    assert not any(i.code == "broken_link" for i in run_lint(wiki_cfg))
