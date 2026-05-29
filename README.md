@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/hero.svg" alt="llm-wiki — agent-maintained, interconnected wikis in any project" width="100%">
+</p>
+
 # llm-wiki
 
 Initialize and maintain [Karpathy-style LLM wikis](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
@@ -24,6 +28,7 @@ llm-wiki init . --target claude      # scaffold wiki/ + CLAUDE.md managed block 
 llm-wiki add-source notes.md         # vendor an existing file/URL into wiki/inbox/  → prints a source id
 llm-wiki new-source "Meeting Notes"  # create a fresh inbox source (empty, or pipe content in)
 llm-wiki new-page "Topic" --type concept --summary "…" --sources <id>
+llm-wiki set <slug> --confidence 0.8 --add-source <id>  # update frontmatter (validates, bumps `updated`)
 llm-wiki index                       # rebuild index.md from page frontmatter
 llm-wiki log ingest "Topic"          # append to the chronological log.md
 llm-wiki search "query"              # keyword search (hybrid keyword+semantic when embeddings are set up)

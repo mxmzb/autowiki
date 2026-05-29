@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="llm-wiki — agent-maintained, interconnected wikis in any project">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0e1a"/>
+      <stop offset="0.55" stop-color="#12123a"/>
+      <stop offset="1" stop-color="#1d1452"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.42" r="0.75">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="320" fill="url(#bg)"/>
+  <rect width="1200" height="320" fill="url(#vignette)"/>
+
+  <!-- left knowledge cluster (teal) -->
+  <g stroke="#5eead4" stroke-opacity="0.30" stroke-width="1.3" fill="none">
+    <line x1="120" y1="100" x2="178" y2="158"/>
+    <line x1="178" y1="158" x2="100" y2="232"/>
+    <line x1="178" y1="158" x2="250" y2="232"/>
+    <line x1="120" y1="100" x2="258" y2="74"/>
+    <line x1="258" y1="74" x2="178" y2="158"/>
+    <line x1="100" y1="232" x2="250" y2="232"/>
+  </g>
+  <g fill="#5eead4" filter="url(#glow)">
+    <circle cx="178" cy="158" r="8" opacity="0.95"/>
+    <circle cx="120" cy="100" r="5.5" opacity="0.85"/>
+    <circle cx="258" cy="74" r="5" opacity="0.8"/>
+    <circle cx="100" cy="232" r="5.5" opacity="0.85"/>
+    <circle cx="250" cy="232" r="6" opacity="0.9"/>
+  </g>
+
+  <!-- right knowledge cluster (violet) -->
+  <g stroke="#a78bfa" stroke-opacity="0.30" stroke-width="1.3" fill="none">
+    <line x1="1080" y1="86" x2="1020" y2="150"/>
+    <line x1="1020" y1="150" x2="1120" y2="170"/>
+    <line x1="1120" y1="170" x2="1060" y2="244"/>
+    <line x1="1020" y1="150" x2="1060" y2="244"/>
+    <line x1="1080" y1="86" x2="950" y2="120"/>
+    <line x1="950" y1="120" x2="1020" y2="150"/>
+  </g>
+  <g fill="#a78bfa" filter="url(#glow)">
+    <circle cx="1020" cy="150" r="8" opacity="0.95"/>
+    <circle cx="1080" cy="86" r="5.5" opacity="0.85"/>
+    <circle cx="1120" cy="170" r="5" opacity="0.8"/>
+    <circle cx="1060" cy="244" r="6" opacity="0.9"/>
+    <circle cx="950" cy="120" r="5" opacity="0.8"/>
+  </g>
+
+  <!-- faint bridge: the wiki connects the two clusters -->
+  <path d="M 250 232 C 470 300, 760 300, 950 120" stroke="#7dd3fc" stroke-opacity="0.12" stroke-width="1.4" fill="none" stroke-dasharray="2 7"/>
+
+  <!-- wordmark + tagline -->
+  <text x="600" y="150" text-anchor="middle" font-family="'SF Mono','JetBrains Mono',ui-monospace,Menlo,monospace" font-size="74" font-weight="700" letter-spacing="2" fill="#eef2f8">llm-wiki</text>
+  <text x="600" y="196" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="23" fill="#aab4c8">agent-maintained, interconnected wikis &#8212; in any project</text>
+  <text x="600" y="236" text-anchor="middle" font-family="'SF Mono','JetBrains Mono',ui-monospace,Menlo,monospace" font-size="15" letter-spacing="1" fill="#6c7791">init &#183; ingest &#183; link &#183; search &#183; graph &#183; review</text>
+</svg>
