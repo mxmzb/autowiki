@@ -52,3 +52,17 @@ def test_list_page_paths(wiki_cfg: WikiConfig):
     new_page(wiki_cfg, type="note", title="A")
     new_page(wiki_cfg, type="note", title="B")
     assert len(list_page_paths(wiki_cfg)) == 2
+
+
+def test_entity_template_uses_references_not_sources(wiki_cfg: WikiConfig):
+    # The body section is external references; "Sources" is reserved for the
+    # frontmatter provenance field, so the heading must not reuse that word.
+    body = new_page(wiki_cfg, type="entity", title="X").read_text()
+    assert "## References" in body
+    assert "## Sources" not in body
+
+
+def test_concept_template_uses_references_not_sources(wiki_cfg: WikiConfig):
+    body = new_page(wiki_cfg, type="concept", title="Y").read_text()
+    assert "## References" in body
+    assert "## Sources" not in body
