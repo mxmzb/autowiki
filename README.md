@@ -9,6 +9,16 @@ in any new or existing project. An agent maintains an interconnected set of mark
 your sources; `llm-wiki` does the deterministic bookkeeping (scaffolding, indexing, linking, search,
 lint) so the agent can focus on the reading and writing.
 
+The use case it was built for: documenting your own coding projects as you build them with LLMs — a
+self-managed, self-fueled wiki that the agent keeps current in the background, so you always have an
+up-to-date picture of the current state of what you're building instead of it living only in chat logs.
+
+## How it works
+
+<p align="center">
+  <img src="assets/diagram.svg" alt="Flowchart of the llm-wiki ingestion and maintenance loop" width="100%">
+</p>
+
 ## Install (local dev)
 
 ```
@@ -67,6 +77,9 @@ wiki/
 ```
 
 `index.md` and `log.md` are generated — let `llm-wiki` manage them. `inbox/` is read-only to the agent.
+
+It's all plain markdown with `[[slug]]` wiki-links, so it looks great in [Obsidian](https://obsidian.md) —
+open the `wiki/` folder as a vault and you get live backlinks and the graph view over your pages for free.
 
 ## Status
 
