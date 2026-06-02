@@ -22,6 +22,8 @@ up-to-date picture of the current state of what you're building instead of it li
 ## Install (local dev)
 
 ```
+git clone https://github.com/mxmzb/init-llm-wiki.git
+cd init-llm-wiki
 uv tool install --editable .
 ```
 
