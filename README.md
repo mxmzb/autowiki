@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/hero.svg" alt="llm-wiki — agent-maintained, interconnected wikis in any project" width="100%">
+  <img src="assets/hero.webp" alt="llm-wiki — agent-maintained, interconnected wikis in any project" width="100%">
 </p>
 
 # llm-wiki
