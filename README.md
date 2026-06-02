@@ -82,12 +82,3 @@ wiki/
 
 It's all plain markdown with `[[slug]]` wiki-links, so it looks great in [Obsidian](https://obsidian.md) —
 open the `wiki/` folder as a vault and you get live backlinks and the graph view over your pages for free.
-
-## Status
-
-All five phases are complete: the core wiki + CLI, the knowledge graph, hybrid (keyword + semantic)
-search, the memory lifecycle (confidence/decay with evergreen pages, supersession, `review`), and
-automation/quality (source-ingestion tracking, `quality`, `maintain`, the proactive SessionStart hook).
-The CLI is fully deterministic — the in-session agent does all semantic work. See
-`docs/superpowers/specs/` and `docs/superpowers/plans/` for the design. Possible follow-ons: shipped
-`--template` use-case templates, an optional headless `--llm` driver for unattended cron, and a PyPI release.
