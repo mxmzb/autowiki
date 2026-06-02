@@ -3,8 +3,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from llm_wiki.cli import app
-from llm_wiki.hooks import run_hook
+from autowiki.cli import app
+from autowiki.hooks import run_hook
 
 runner = CliRunner()
 

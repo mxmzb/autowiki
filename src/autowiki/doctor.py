@@ -15,11 +15,11 @@ def doctor(cfg: WikiConfig) -> list[tuple[str, str]]:
 
     if cfg.schema_version < SCHEMA_VERSION:
         out.append(
-            ("warn", f"wiki schema v{cfg.schema_version} < tool v{SCHEMA_VERSION}; run `llm-wiki upgrade`")
+            ("warn", f"wiki schema v{cfg.schema_version} < tool v{SCHEMA_VERSION}; run `autowiki upgrade`")
         )
     elif cfg.schema_version > SCHEMA_VERSION:
         out.append(
-            ("error", f"wiki schema v{cfg.schema_version} > tool v{SCHEMA_VERSION}; upgrade the llm-wiki tool")
+            ("error", f"wiki schema v{cfg.schema_version} > tool v{SCHEMA_VERSION}; upgrade the autowiki tool")
         )
     else:
         out.append(("ok", f"schema v{cfg.schema_version}"))
@@ -38,22 +38,22 @@ def doctor(cfg: WikiConfig) -> list[tuple[str, str]]:
     if block_file.exists() and BEGIN in block_file.read_text(encoding="utf-8"):
         out.append(("ok", f"managed block present in {block_file.name}"))
     else:
-        out.append(("warn", f"managed block missing from {block_file.name}; run `llm-wiki upgrade`"))
+        out.append(("warn", f"managed block missing from {block_file.name}; run `autowiki upgrade`"))
 
     out.append(("ok", f"hooks {'installed' if hooks_installed(project_root) else 'not installed'}"))
 
     if not embeddings.available(cfg):
-        out.append(("ok", "embeddings: not installed (keyword search only) — `pip install llm-wiki[embeddings]`"))
+        out.append(("ok", "embeddings: not installed (keyword search only) — `pip install autowiki[embeddings]`"))
     else:
         loaded = vectorindex.load(cfg)
         if loaded is None:
-            out.append(("warn", f"embeddings available ({cfg.embedding_provider}); no index — run `llm-wiki embed`"))
+            out.append(("warn", f"embeddings available ({cfg.embedding_provider}); no index — run `autowiki embed`"))
         else:
             # Compare against the parseable (embeddable) set, not raw file count,
             # so an unparseable page doesn't read as a permanent "stale" index.
             indexed, page_count = len(loaded[0]), len(vectorindex._current_pages(cfg))
             if indexed != page_count:
-                out.append(("warn", f"vector index stale ({indexed} indexed vs {page_count} pages); run `llm-wiki embed`"))
+                out.append(("warn", f"vector index stale ({indexed} indexed vs {page_count} pages); run `autowiki embed`"))
             else:
                 out.append(("ok", f"embeddings available; {indexed} vectors indexed"))
     return out

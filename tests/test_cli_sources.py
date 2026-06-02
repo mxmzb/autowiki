@@ -2,10 +2,10 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from llm_wiki.cli import app
-from llm_wiki.config import WikiConfig
-from llm_wiki.pages import new_page
-from llm_wiki.sources import add_source
+from autowiki.cli import app
+from autowiki.config import WikiConfig
+from autowiki.pages import new_page
+from autowiki.sources import add_source
 
 runner = CliRunner()
 

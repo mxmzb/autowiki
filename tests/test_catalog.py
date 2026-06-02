@@ -1,7 +1,7 @@
-from llm_wiki.catalog import build_index, index_is_current, write_index
-from llm_wiki.config import WikiConfig
-from llm_wiki.frontmatter import dump, parse
-from llm_wiki.pages import new_page
+from autowiki.catalog import build_index, index_is_current, write_index
+from autowiki.config import WikiConfig
+from autowiki.frontmatter import dump, parse
+from autowiki.pages import new_page
 
 
 def test_archived_pages_excluded_from_index(wiki_cfg: WikiConfig):

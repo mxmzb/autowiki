@@ -42,8 +42,8 @@ def _root() -> None:
 
 @app.command()
 def version() -> None:
-    """Print the llm-wiki tool and schema version."""
-    typer.echo(f"llm-wiki {__version__} (schema v{SCHEMA_VERSION})")
+    """Print the autowiki tool and schema version."""
+    typer.echo(f"autowiki {__version__} (schema v{SCHEMA_VERSION})")
 
 
 @app.command()
@@ -73,7 +73,7 @@ def _resolve_cfg(path: Path) -> WikiConfig:
     root = find_wiki_root(path)
     if root is None:
         typer.echo(
-            "No wiki found. Run `llm-wiki init` here, or pass --wiki <path-inside-a-wiki>.",
+            "No wiki found. Run `autowiki init` here, or pass --wiki <path-inside-a-wiki>.",
             err=True,
         )
         raise typer.Exit(1)
@@ -190,7 +190,7 @@ def index_cmd(
         if index_is_current(cfg):
             typer.echo("index.md is current.")
         else:
-            typer.echo("index.md is out of date; run `llm-wiki index`.", err=True)
+            typer.echo("index.md is out of date; run `autowiki index`.", err=True)
             raise typer.Exit(2)
     else:
         write_index(cfg)
@@ -266,18 +266,18 @@ def install_hooks_cmd(
     cfg = _resolve_cfg(wiki)
     project_root, _ = project_root_of(cfg)
     install_hooks(project_root)
-    typer.echo(f"Installed llm-wiki hooks in {project_root / '.claude' / 'settings.json'}")
+    typer.echo(f"Installed autowiki hooks in {project_root / '.claude' / 'settings.json'}")
 
 
 @app.command("uninstall-hooks")
 def uninstall_hooks_cmd(
     wiki: Path = typer.Option(Path("."), "--wiki", help="A path inside the target wiki."),
 ) -> None:
-    """Remove the llm-wiki hooks from .claude/settings.json."""
+    """Remove the autowiki hooks from .claude/settings.json."""
     cfg = _resolve_cfg(wiki)
     project_root, _ = project_root_of(cfg)
     uninstall_hooks(project_root)
-    typer.echo("Removed llm-wiki hooks.")
+    typer.echo("Removed autowiki hooks.")
 
 
 @app.command("hook")
@@ -445,7 +445,7 @@ def embed_cmd(
     backend = embeddings.get_backend(cfg)
     if backend is None:
         typer.echo(
-            "Embeddings backend unavailable. Install with: pip install 'llm-wiki[embeddings]'",
+            "Embeddings backend unavailable. Install with: pip install 'autowiki[embeddings]'",
             err=True,
         )
         raise typer.Exit(1)
@@ -467,13 +467,13 @@ def similar_cmd(
     cfg = _resolve_cfg(wiki)
     if not embeddings.available(cfg) or vectorindex.load(cfg) is None:
         typer.echo(
-            "No vector index. Install 'llm-wiki[embeddings]' and run `llm-wiki embed`.", err=True
+            "No vector index. Install 'autowiki[embeddings]' and run `autowiki embed`.", err=True
         )
         raise typer.Exit(1)
     try:
         results = vectorindex.similar(cfg, slug, limit=limit)
     except KeyError:
-        typer.echo(f"page not in index: {slug} (run `llm-wiki embed`)", err=True)
+        typer.echo(f"page not in index: {slug} (run `autowiki embed`)", err=True)
         raise typer.Exit(1)
     if json_out:
         typer.echo(json.dumps([{"slug": s, "score": sc} for s, sc in results]))

@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
 
-from llm_wiki.catalog import index_is_current
-from llm_wiki.config import WikiConfig
-from llm_wiki.hooks import hooks_installed, install_hooks, run_hook, uninstall_hooks
-from llm_wiki.pages import new_page
+from autowiki.catalog import index_is_current
+from autowiki.config import WikiConfig
+from autowiki.hooks import hooks_installed, install_hooks, run_hook, uninstall_hooks
+from autowiki.pages import new_page
 
 
 def _settings(p: Path) -> Path:
@@ -74,7 +74,7 @@ def test_install_includes_session_start(tmp_path: Path):
 
 
 def test_session_start_summary_mentions_pending(wiki_cfg: WikiConfig, tmp_path: Path):
-    from llm_wiki.sources import add_source
+    from autowiki.sources import add_source
 
     src = tmp_path / "x.txt"
     src.write_text("hi")

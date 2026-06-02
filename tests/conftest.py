@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from llm_wiki import embeddings
-from llm_wiki.config import WikiConfig
-from llm_wiki.scaffold import init_wiki
+from autowiki import embeddings
+from autowiki.config import WikiConfig
+from autowiki.scaffold import init_wiki
 
 
 @pytest.fixture

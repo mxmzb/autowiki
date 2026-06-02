@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from llm_wiki.config import (
+from autowiki.config import (
     CONFIG_NAME,
     WikiConfig,
     find_wiki_root,

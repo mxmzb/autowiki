@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 
-import llm_wiki.sources as sources
-from llm_wiki.config import WikiConfig
-from llm_wiki.pages import new_page
-from llm_wiki.sources import (
+import autowiki.sources as sources
+from autowiki.config import WikiConfig
+from autowiki.pages import new_page
+from autowiki.sources import (
     add_source,
     ingested_ids,
     new_source,

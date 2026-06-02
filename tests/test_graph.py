@@ -1,9 +1,9 @@
 import json
 
-from llm_wiki.config import WikiConfig
-from llm_wiki.frontmatter import dump, parse
-from llm_wiki.graph import build_graph, export, hubs, neighbors, path, stats
-from llm_wiki.pages import new_page
+from autowiki.config import WikiConfig
+from autowiki.frontmatter import dump, parse
+from autowiki.graph import build_graph, export, hubs, neighbors, path, stats
+from autowiki.pages import new_page
 
 
 def _link(cfg, slug, target):

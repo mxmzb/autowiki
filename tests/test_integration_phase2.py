@@ -3,8 +3,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from llm_wiki.cli import app
-from llm_wiki.frontmatter import dump, parse
+from autowiki.cli import app
+from autowiki.frontmatter import dump, parse
 
 runner = CliRunner()
 

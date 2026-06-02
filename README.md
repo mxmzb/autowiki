@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/hero.webp" alt="llm-wiki — agent-maintained, interconnected wikis in any project" width="100%">
+  <img src="assets/hero.webp" alt="autowiki — agent-maintained, interconnected wikis in any project" width="100%">
 </p>
 
-# llm-wiki
+# autowiki
 
 Initialize and maintain [Karpathy-style LLM wikis](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 in any new or existing project. An agent maintains an interconnected set of markdown notes about
-your sources; `llm-wiki` does the deterministic bookkeeping (scaffolding, indexing, linking, search,
+your sources; `autowiki` does the deterministic bookkeeping (scaffolding, indexing, linking, search,
 lint) so the agent can focus on the reading and writing.
 
 The use case it was built for: documenting your own coding projects as you build them with LLMs — a
@@ -16,51 +16,51 @@ up-to-date picture of the current state of what you're building instead of it li
 ## How it works
 
 <p align="center">
-  <img src="assets/diagram.svg" alt="Flowchart of the llm-wiki ingestion and maintenance loop" width="100%">
+  <img src="assets/diagram.svg" alt="Flowchart of the autowiki ingestion and maintenance loop" width="100%">
 </p>
 
 ## Install (local dev)
 
 ```
-git clone https://github.com/mxmzb/init-llm-wiki.git
-cd init-llm-wiki
+git clone https://github.com/mxmzb/autowiki.git
+cd autowiki
 uv tool install --editable .
 ```
 
 Edits to the source take effect immediately, but the globally-installed tool has its own isolated
 environment — after a **dependency change** (e.g. a new package), re-run
-`uv tool install --editable . --reinstall` so the global `llm-wiki` picks it up.
+`uv tool install --editable . --reinstall` so the global `autowiki` picks it up.
 
 ## Quick start
 
 ```
-llm-wiki init . --target claude      # scaffold wiki/ + CLAUDE.md managed block + slash commands
+autowiki init . --target claude      # scaffold wiki/ + CLAUDE.md managed block + slash commands
                                      #   --target generic for AGENTS.md; --root for a wiki at repo root
                                      #   --hooks to install opt-in Claude hygiene hooks
-llm-wiki add-source notes.md         # vendor an existing file/URL into wiki/inbox/  → prints a source id
-llm-wiki new-source "Meeting Notes"  # create a fresh inbox source (empty, or pipe content in)
-llm-wiki new-page "Topic" --type concept --summary "…" --sources <id>
-llm-wiki set <slug> --confidence 0.8 --add-source <id>  # update frontmatter (validates, bumps `updated`)
-llm-wiki index                       # rebuild index.md from page frontmatter
-llm-wiki log ingest "Topic"          # append to the chronological log.md
-llm-wiki search "query"              # keyword search (hybrid keyword+semantic when embeddings are set up)
-llm-wiki lint --fix                  # structural health check (orphans, broken links, stale, …)
-llm-wiki graph neighbors <slug>      # explore the knowledge graph (also: path / hubs / stats / export)
-llm-wiki supersede <old> <new>       # mark old superseded by new (kept, but dropped from the catalog)
-llm-wiki review                      # surface pages that have decayed or are past review_by
-llm-wiki sources --pending           # inbox sources not yet ingested into a page
-llm-wiki quality                     # weakest pages (missing summaries, sources, links)
-llm-wiki maintain                    # one-shot pass: rebuild index + lint/review/pending/quality report
-llm-wiki status                      # page counts, status/tier breakdown, review-due, lint summary
-llm-wiki doctor                      # health/setup check
-llm-wiki upgrade                     # refresh schema/commands/block to the installed version
+autowiki add-source notes.md         # vendor an existing file/URL into wiki/inbox/  → prints a source id
+autowiki new-source "Meeting Notes"  # create a fresh inbox source (empty, or pipe content in)
+autowiki new-page "Topic" --type concept --summary "…" --sources <id>
+autowiki set <slug> --confidence 0.8 --add-source <id>  # update frontmatter (validates, bumps `updated`)
+autowiki index                       # rebuild index.md from page frontmatter
+autowiki log ingest "Topic"          # append to the chronological log.md
+autowiki search "query"              # keyword search (hybrid keyword+semantic when embeddings are set up)
+autowiki lint --fix                  # structural health check (orphans, broken links, stale, …)
+autowiki graph neighbors <slug>      # explore the knowledge graph (also: path / hubs / stats / export)
+autowiki supersede <old> <new>       # mark old superseded by new (kept, but dropped from the catalog)
+autowiki review                      # surface pages that have decayed or are past review_by
+autowiki sources --pending           # inbox sources not yet ingested into a page
+autowiki quality                     # weakest pages (missing summaries, sources, links)
+autowiki maintain                    # one-shot pass: rebuild index + lint/review/pending/quality report
+autowiki status                      # page counts, status/tier breakdown, review-due, lint summary
+autowiki doctor                      # health/setup check
+autowiki upgrade                     # refresh schema/commands/block to the installed version
 ```
 
 With `--hooks`, a SessionStart hook greets each Claude session with what needs attention (pending
 sources, pages due for review, lint errors) so the in-session agent can act on it.
 
-**Semantic search (optional):** `pip install 'llm-wiki[embeddings]'`, then `llm-wiki embed` to build a
-local vector index — `search` then fuses keyword + semantic results, and `llm-wiki similar <slug>` finds
+**Semantic search (optional):** `pip install 'autowiki[embeddings]'`, then `autowiki embed` to build a
+local vector index — `search` then fuses keyword + semantic results, and `autowiki similar <slug>` finds
 near-duplicate pages. Without the extra, search stays keyword-only.
 
 Commands resolve the wiki from the current directory (walking up, and into a `wiki/` subdir), or
@@ -75,10 +75,10 @@ wiki/
 ├── index.md      generated catalog
 ├── log.md        append-only chronological ledger
 ├── SCHEMA.md     the maintainer playbook (edit to customize page types, rules, stale threshold)
-└── .llm-wiki.toml
+└── .autowiki.toml
 ```
 
-`index.md` and `log.md` are generated — let `llm-wiki` manage them. `inbox/` is read-only to the agent.
+`index.md` and `log.md` are generated — let `autowiki` manage them. `inbox/` is read-only to the agent.
 
 It's all plain markdown with `[[slug]]` wiki-links, so it looks great in [Obsidian](https://obsidian.md) —
 open the `wiki/` folder as a vault and you get live backlinks and the graph view over your pages for free.

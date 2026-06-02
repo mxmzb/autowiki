@@ -10,22 +10,22 @@ from .lifecycle import review
 from .lint import run_lint
 from .sources import pending_sources
 
-HOOK_PREFIX = "llm-wiki hook"
+HOOK_PREFIX = "autowiki hook"
 
-# Thin settings.json entries — the behavior lives in `llm-wiki hook <event>` so it
+# Thin settings.json entries — the behavior lives in `autowiki hook <event>` so it
 # stays upgradable with the package.
 _DESIRED = {
     "PreToolUse": {
         "matcher": "Edit|Write",
-        "hooks": [{"type": "command", "command": "llm-wiki hook pre-edit"}],
+        "hooks": [{"type": "command", "command": "autowiki hook pre-edit"}],
     },
     "PostToolUse": {
         "matcher": "Edit|Write",
-        "hooks": [{"type": "command", "command": "llm-wiki hook post-edit"}],
+        "hooks": [{"type": "command", "command": "autowiki hook post-edit"}],
     },
     # Proactive: surface what needs attention to the agent at session start.
     "SessionStart": {
-        "hooks": [{"type": "command", "command": "llm-wiki hook session-start"}],
+        "hooks": [{"type": "command", "command": "autowiki hook session-start"}],
     },
 }
 
@@ -119,7 +119,7 @@ def _session_summary(cfg) -> str:
         parts.append("index stale")
     if not parts:
         return ""
-    return "llm-wiki: " + ", ".join(parts) + ". Run /wiki-ingest for pending sources and /wiki-lint to fix issues."
+    return "autowiki: " + ", ".join(parts) + ". Run /wiki-ingest for pending sources and /wiki-lint to fix issues."
 
 
 def run_hook(event: str, stdin_text: str) -> tuple[int, str]:
@@ -156,7 +156,7 @@ def run_hook(event: str, stdin_text: str) -> tuple[int, str]:
             return (
                 2,
                 f"blocked: {fp.name} is generated/read-only — use "
-                f"`llm-wiki index` / `llm-wiki log` / `llm-wiki add-source`.",
+                f"`autowiki index` / `autowiki log` / `autowiki add-source`.",
             )
         return (0, "")
 
@@ -168,10 +168,10 @@ def run_hook(event: str, stdin_text: str) -> tuple[int, str]:
             if issues:
                 return (
                     0,
-                    f"llm-wiki: index rebuilt; lint found {errors} error(s), "
-                    f"{len(issues) - errors} warning(s). Run `llm-wiki lint`.",
+                    f"autowiki: index rebuilt; lint found {errors} error(s), "
+                    f"{len(issues) - errors} warning(s). Run `autowiki lint`.",
                 )
-            return (0, "llm-wiki: index rebuilt; lint clean.")
+            return (0, "autowiki: index rebuilt; lint clean.")
         return (0, "")
 
     return (0, "")

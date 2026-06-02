@@ -1,7 +1,7 @@
-from llm_wiki.config import WikiConfig
-from llm_wiki.frontmatter import PageFrontmatter, today
-from llm_wiki.pages import new_page
-from llm_wiki.quality import quality_report, quality_score
+from autowiki.config import WikiConfig
+from autowiki.frontmatter import PageFrontmatter, today
+from autowiki.pages import new_page
+from autowiki.quality import quality_report, quality_score
 
 
 def test_bare_page_scores_low():

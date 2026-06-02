@@ -1,7 +1,7 @@
 import math
 
-from llm_wiki import embeddings
-from llm_wiki.config import WikiConfig
+from autowiki import embeddings
+from autowiki.config import WikiConfig
 
 
 def _cos(x, y):

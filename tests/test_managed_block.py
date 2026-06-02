@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from llm_wiki.managed_block import BEGIN, END, render_block, upsert_block
+from autowiki.managed_block import BEGIN, END, render_block, upsert_block
 
 
 def test_render_block_claude_uses_import():

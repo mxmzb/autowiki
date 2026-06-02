@@ -1,8 +1,8 @@
-from llm_wiki.catalog import write_index
-from llm_wiki.config import WikiConfig
-from llm_wiki.frontmatter import PageFrontmatter, dump, parse, today
-from llm_wiki.lint import fix, run_lint
-from llm_wiki.pages import new_page
+from autowiki.catalog import write_index
+from autowiki.config import WikiConfig
+from autowiki.frontmatter import PageFrontmatter, dump, parse, today
+from autowiki.lint import fix, run_lint
+from autowiki.pages import new_page
 
 
 def _codes(issues):

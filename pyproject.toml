@@ -1,5 +1,5 @@
 [project]
-name = "llm-wiki"
+name = "autowiki"
 version = "0.1.0"
 description = "Initialize and maintain Karpathy-style LLM wikis in any project."
 requires-python = ">=3.11"
@@ -15,11 +15,11 @@ dev = ["pytest>=8.0", "numpy>=1.24"]
 embeddings = ["fastembed>=0.3", "numpy>=1.24"]
 
 [project.scripts]
-llm-wiki = "llm_wiki.cli:main"
+autowiki = "autowiki.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/llm_wiki"]
+packages = ["src/autowiki"]

@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from llm_wiki.config import CONFIG_NAME, load_config
-from llm_wiki.hooks import hooks_installed
-from llm_wiki.managed_block import BEGIN
-from llm_wiki.scaffold import init_wiki, project_root_of
+from autowiki.config import CONFIG_NAME, load_config
+from autowiki.hooks import hooks_installed
+from autowiki.managed_block import BEGIN
+from autowiki.scaffold import init_wiki, project_root_of
 
 
 def test_init_creates_expected_tree(project: Path):

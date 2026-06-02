@@ -1,10 +1,10 @@
 import pytest
 from typer.testing import CliRunner
 
-from llm_wiki.cli import app
-from llm_wiki.config import WikiConfig
-from llm_wiki.frontmatter import dump, parse, today
-from llm_wiki.pages import new_page, set_page_fields
+from autowiki.cli import app
+from autowiki.config import WikiConfig
+from autowiki.frontmatter import dump, parse, today
+from autowiki.pages import new_page, set_page_fields
 
 runner = CliRunner()
 

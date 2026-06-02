@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .frontmatter import PAGE_TYPES
 
-CONFIG_NAME = ".llm-wiki.toml"
+CONFIG_NAME = ".autowiki.toml"
 SCHEMA_VERSION = 1
 
 

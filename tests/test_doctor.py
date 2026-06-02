@@ -1,7 +1,7 @@
-from llm_wiki.config import WikiConfig
-from llm_wiki.doctor import doctor, status
-from llm_wiki.log import append_log
-from llm_wiki.pages import new_page
+from autowiki.config import WikiConfig
+from autowiki.doctor import doctor, status
+from autowiki.log import append_log
+from autowiki.pages import new_page
 
 
 def test_doctor_healthy_wiki_has_no_errors(wiki_cfg: WikiConfig):
@@ -32,8 +32,8 @@ def test_status_reports_last_log_entry(wiki_cfg: WikiConfig):
 
 
 def test_doctor_index_not_stale_with_unparseable_page(fake_embeddings, wiki_cfg: WikiConfig):
-    from llm_wiki import embeddings
-    from llm_wiki.vectorindex import build_or_update
+    from autowiki import embeddings
+    from autowiki.vectorindex import build_or_update
 
     new_page(wiki_cfg, type="concept", title="Good", summary="x")
     build_or_update(wiki_cfg, embeddings.get_backend(wiki_cfg))

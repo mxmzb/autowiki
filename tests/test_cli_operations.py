@@ -2,7 +2,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from llm_wiki.cli import app
+from autowiki.cli import app
 
 runner = CliRunner()
 

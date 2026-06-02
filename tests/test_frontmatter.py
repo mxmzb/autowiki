@@ -1,4 +1,4 @@
-from llm_wiki.frontmatter import (
+from autowiki.frontmatter import (
     PAGE_TYPES,
     PageFrontmatter,
     dump,
@@ -25,7 +25,7 @@ def test_dump_then_parse_round_trip():
         slug="andrej-karpathy",
         summary="ML researcher",
         tags=["ml", "people"],
-        related=["llm-wiki-pattern"],
+        related=["autowiki-pattern"],
     )
     text = dump(fm, "Body paragraph.\n")
     parsed, body = parse(text)

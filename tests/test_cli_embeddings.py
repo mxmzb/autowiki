@@ -3,9 +3,9 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from llm_wiki.cli import app
-from llm_wiki.config import WikiConfig
-from llm_wiki.pages import new_page
+from autowiki.cli import app
+from autowiki.config import WikiConfig
+from autowiki.pages import new_page
 
 runner = CliRunner()
 
@@ -33,7 +33,7 @@ def test_embed_without_backend_exits_1(wiki_cfg: WikiConfig):
     # no fake_embeddings fixture → no backend in the dev env
     r = runner.invoke(app, ["embed", "--wiki", str(wiki_cfg.root)])
     assert r.exit_code == 1
-    assert "llm-wiki[embeddings]" in (r.stdout + str(r.stderr))
+    assert "autowiki[embeddings]" in (r.stdout + str(r.stderr))
 
 
 def test_similar_missing_slug_exits_1(fake_embeddings, wiki_cfg: WikiConfig):

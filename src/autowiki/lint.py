@@ -123,7 +123,7 @@ def run_lint(cfg: WikiConfig) -> list[LintIssue]:
     # Index freshness.
     if not index_is_current(cfg):
         issues.append(
-            LintIssue("warning", "index_stale", "", "index.md is out of date; run `llm-wiki index`")
+            LintIssue("warning", "index_stale", "", "index.md is out of date; run `autowiki index`")
         )
 
     # Structural contradiction hook (semantic resolution is Phase 5).

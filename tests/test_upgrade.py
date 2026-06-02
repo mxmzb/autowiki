@@ -1,7 +1,7 @@
-from llm_wiki.assets import load_template
-from llm_wiki.config import SCHEMA_VERSION, WikiConfig, load_config, write_config
-from llm_wiki.pages import load_page, new_page
-from llm_wiki.upgrade import upgrade
+from autowiki.assets import load_template
+from autowiki.config import SCHEMA_VERSION, WikiConfig, load_config, write_config
+from autowiki.pages import load_page, new_page
+from autowiki.upgrade import upgrade
 
 
 def test_upgrade_restores_schema_template(wiki_cfg: WikiConfig):
@@ -36,8 +36,8 @@ def test_upgrade_does_not_touch_content(wiki_cfg: WikiConfig):
 
 
 def test_upgrade_and_doctor_work_in_root_layout(tmp_path):
-    from llm_wiki.doctor import doctor
-    from llm_wiki.scaffold import init_wiki
+    from autowiki.doctor import doctor
+    from autowiki.scaffold import init_wiki
 
     proj = tmp_path / "kb"
     proj.mkdir()

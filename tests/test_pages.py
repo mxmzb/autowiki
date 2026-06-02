@@ -1,7 +1,7 @@
 import pytest
 
-from llm_wiki.config import WikiConfig
-from llm_wiki.pages import list_page_paths, load_page, new_page, slugify
+from autowiki.config import WikiConfig
+from autowiki.pages import list_page_paths, load_page, new_page, slugify
 
 
 def test_slugify():

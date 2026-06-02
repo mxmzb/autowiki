@@ -1,8 +1,8 @@
-from llm_wiki import embeddings
-from llm_wiki.config import WikiConfig
-from llm_wiki.frontmatter import dump, parse
-from llm_wiki.pages import new_page
-from llm_wiki.vectorindex import build_or_update, load, query_vector, similar
+from autowiki import embeddings
+from autowiki.config import WikiConfig
+from autowiki.frontmatter import dump, parse
+from autowiki.pages import new_page
+from autowiki.vectorindex import build_or_update, load, query_vector, similar
 
 
 def test_build_writes_store(fake_embeddings, wiki_cfg: WikiConfig):

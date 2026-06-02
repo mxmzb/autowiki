@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-BEGIN = "<!-- BEGIN llm-wiki (managed) -->"
-END = "<!-- END llm-wiki (managed) -->"
+BEGIN = "<!-- BEGIN autowiki (managed) -->"
+END = "<!-- END autowiki (managed) -->"
 
 _PATTERN = re.compile(re.escape(BEGIN) + r".*?" + re.escape(END) + r"\n?", re.DOTALL)
 
@@ -13,15 +13,15 @@ def render_block(target: str, wiki_rel: str) -> str:
     """Render the managed block. `wiki_rel` is "" (root mode) or "wiki/"."""
     schema_ref = f"@{wiki_rel}SCHEMA.md" if target == "claude" else f"`{wiki_rel}SCHEMA.md`"
     body = f"""## LLM Wiki
-This project maintains an LLM wiki under `{wiki_rel or "./"}` via the `llm-wiki` CLI.
+This project maintains an LLM wiki under `{wiki_rel or "./"}` via the `autowiki` CLI.
 Full maintainer rules: {schema_ref}
 
 Invariants — do not violate:
-- `{wiki_rel}index.md` and `{wiki_rel}log.md` are GENERATED. Never hand-edit; use `llm-wiki index` / `llm-wiki log`.
-- `{wiki_rel}inbox/` is read-only raw sources. Add only via `llm-wiki add-source`.
-- Create pages with `llm-wiki new-page` (correct frontmatter), never by hand.
-- Before creating a page, `llm-wiki search` first — update an existing page rather than duplicate.
-- After any wiki change, run `llm-wiki lint` (then `llm-wiki index`).
+- `{wiki_rel}index.md` and `{wiki_rel}log.md` are GENERATED. Never hand-edit; use `autowiki index` / `autowiki log`.
+- `{wiki_rel}inbox/` is read-only raw sources. Add only via `autowiki add-source`.
+- Create pages with `autowiki new-page` (correct frontmatter), never by hand.
+- Before creating a page, `autowiki search` first — update an existing page rather than duplicate.
+- After any wiki change, run `autowiki lint` (then `autowiki index`).
 
 Maintain the wiki only when explicitly asked (e.g. /wiki-ingest, /wiki-query, /wiki-lint).
 See {schema_ref} for the full ingest/query/lint workflows."""

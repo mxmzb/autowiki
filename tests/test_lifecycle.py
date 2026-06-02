@@ -1,9 +1,9 @@
 import datetime as dt
 
-from llm_wiki.config import WikiConfig
-from llm_wiki.frontmatter import PageFrontmatter, dump
-from llm_wiki.lifecycle import retention, review, supersede
-from llm_wiki.pages import load_page, new_page
+from autowiki.config import WikiConfig
+from autowiki.frontmatter import PageFrontmatter, dump
+from autowiki.lifecycle import retention, review, supersede
+from autowiki.pages import load_page, new_page
 
 NOW = dt.date(2026, 1, 1)
 

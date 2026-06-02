@@ -1,5 +1,5 @@
-from llm_wiki.config import WikiConfig
-from llm_wiki.log import append_log
+from autowiki.config import WikiConfig
+from autowiki.log import append_log
 
 
 def test_append_log_canonical_line(wiki_cfg: WikiConfig):

@@ -1,6 +1,6 @@
-from llm_wiki.config import WikiConfig
-from llm_wiki.pages import new_page
-from llm_wiki.search import _rrf, search
+from autowiki.config import WikiConfig
+from autowiki.pages import new_page
+from autowiki.search import _rrf, search
 
 
 def test_rrf_ranks_pages_in_both_lists_highest():
@@ -12,8 +12,8 @@ def test_rrf_ranks_pages_in_both_lists_highest():
 
 
 def test_hybrid_search_runs_with_index_and_finds_page(fake_embeddings, wiki_cfg: WikiConfig):
-    from llm_wiki import embeddings
-    from llm_wiki.vectorindex import build_or_update
+    from autowiki import embeddings
+    from autowiki.vectorindex import build_or_update
 
     new_page(wiki_cfg, type="concept", title="Neural Networks", summary="deep learning models")
     new_page(wiki_cfg, type="concept", title="Bicycle Repair", summary="fixing bikes")
