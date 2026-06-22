@@ -23,7 +23,12 @@ Invariants — do not violate:
 - Before creating a page, `autowiki search` first — update an existing page rather than duplicate.
 - After any wiki change, run `autowiki lint` (then `autowiki index`).
 
-Maintain the wiki only when explicitly asked (e.g. /wiki-ingest, /wiki-query, /wiki-lint).
+Don't modify the wiki unprompted — act on it only when asked (/wiki-ingest,
+/wiki-query, /wiki-lint). BUT lean proactive about *suggesting* it: whenever
+substantial work takes shape — a PR opened, a PR or feature branch merged (to main
+or locally), or a meaningful unit of work finished — offer a /wiki-ingest so the
+change is captured. Always suggest on a merge; suggest on a PR open too. The user
+decides whether to run it.
 See {schema_ref} for the full ingest/query/lint workflows."""
     return f"{BEGIN}\n{body}\n{END}\n"
 
