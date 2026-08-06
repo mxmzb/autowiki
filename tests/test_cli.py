@@ -15,7 +15,7 @@ def test_version_prints_tool_and_schema_version():
 
 
 def test_init_command_creates_wiki(tmp_path: Path):
-    result = runner.invoke(app, ["init", str(tmp_path), "--target", "generic"])
+    result = runner.invoke(app, ["init", str(tmp_path), "--target", "generic", "--yes"])
     assert result.exit_code == 0
     assert (tmp_path / "wiki" / "SCHEMA.md").exists()
     assert "Wiki created" in result.stdout

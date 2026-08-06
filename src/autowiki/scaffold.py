@@ -100,16 +100,22 @@ def init_wiki(
     root_mode: bool = False,
     force: bool = False,
     with_hooks: bool = False,
+    wiki_update_mode: str | None = None,
 ) -> tuple[WikiConfig, str]:
     """Scaffold a wiki. Returns (config, action) where action is created|recreated|updated."""
     project_root = Path(project_root).resolve()
     wiki_root = project_root if root_mode else project_root / "wiki"
     existed = (wiki_root / cfgmod.CONFIG_NAME).exists()
+    existing_cfg = cfgmod.load_config(wiki_root) if existed else None
 
     if existed and not force:
         # Idempotent re-init: refresh only the managed block, keeping the wiki's
         # originally-chosen target (a re-init does not switch claude <-> generic).
-        cfg = cfgmod.load_config(wiki_root)
+        cfg = existing_cfg
+        assert cfg is not None
+        if wiki_update_mode is not None:
+            cfg.wiki_update_mode = cfgmod.normalize_wiki_update_mode(wiki_update_mode)
+            cfgmod.write_config(cfg)
         _write_managed_block(project_root, cfg, root_mode)
         if with_hooks:
             install_hooks(project_root)
@@ -121,7 +127,19 @@ def init_wiki(
     _touch(wiki_root / "inbox" / ".gitkeep")
     _touch(wiki_root / "pages" / ".gitkeep")
 
-    cfg = WikiConfig(root=wiki_root, target=target, root_layout=root_mode)
+    selected_mode = (
+        cfgmod.normalize_wiki_update_mode(wiki_update_mode)
+        if wiki_update_mode is not None
+        else existing_cfg.wiki_update_mode
+        if existing_cfg is not None
+        else cfgmod.ALONGSIDE_PR
+    )
+    cfg = WikiConfig(
+        root=wiki_root,
+        target=target,
+        wiki_update_mode=selected_mode,
+        root_layout=root_mode,
+    )
     cfgmod.write_config(cfg)
     (wiki_root / "SCHEMA.md").write_text(load_template("SCHEMA.md"), encoding="utf-8")
     _ensure_gitignore_line(wiki_root / ".gitignore", ".index/")

@@ -15,7 +15,7 @@ def _run(args):
 def test_phase3_hybrid_lifecycle(fake_embeddings, tmp_path: Path):
     proj = tmp_path / "proj"
     proj.mkdir()
-    assert _run(["init", str(proj), "--target", "generic"]).exit_code == 0
+    assert _run(["init", str(proj), "--target", "generic", "--yes"]).exit_code == 0
     wiki = proj / "wiki"
 
     _run(["new-page", "Neural Networks", "--type", "concept", "--summary", "deep learning models",

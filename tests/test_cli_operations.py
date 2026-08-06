@@ -10,7 +10,9 @@ runner = CliRunner()
 def test_full_ingest_loop(tmp_path: Path):
     proj = tmp_path / "proj"
     proj.mkdir()
-    assert runner.invoke(app, ["init", str(proj), "--target", "generic"]).exit_code == 0
+    assert runner.invoke(
+        app, ["init", str(proj), "--target", "generic", "--yes"]
+    ).exit_code == 0
     wiki = proj / "wiki"
 
     # A raw source file to ingest.
@@ -64,7 +66,7 @@ def test_command_outside_a_wiki_errors(tmp_path: Path):
 def test_index_check_flags_stale(tmp_path: Path):
     proj = tmp_path / "proj"
     proj.mkdir()
-    runner.invoke(app, ["init", str(proj), "--target", "generic"])
+    runner.invoke(app, ["init", str(proj), "--target", "generic", "--yes"])
     wiki = proj / "wiki"
     runner.invoke(
         app, ["new-page", "Solo", "--type", "note", "--wiki", str(wiki)]

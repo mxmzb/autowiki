@@ -18,7 +18,9 @@ def test_phase1_full_lifecycle(tmp_path: Path):
     proj.mkdir()
 
     # init (claude + hooks)
-    assert _run(["init", str(proj), "--target", "claude", "--hooks"]).exit_code == 0
+    assert _run(
+        ["init", str(proj), "--target", "claude", "--hooks", "--yes"]
+    ).exit_code == 0
     wiki = proj / "wiki"
     assert hooks_installed(proj)
 
