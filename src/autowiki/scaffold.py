@@ -89,7 +89,7 @@ def _instruction_targets(project_root: Path, target: str) -> list[Path]:
 
 def _write_managed_block(project_root: Path, cfg: WikiConfig, root_mode: bool) -> None:
     wiki_rel = "" if root_mode else "wiki/"
-    block = render_block(cfg.target, wiki_rel)
+    block = render_block(cfg.target, wiki_rel, cfg.wiki_update_mode)
     for path in _instruction_targets(project_root, cfg.target):
         upsert_block(path, block)
 

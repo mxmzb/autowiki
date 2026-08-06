@@ -33,7 +33,7 @@ def upgrade(cfg: WikiConfig) -> dict:
     # Refresh the managed block.
     wiki_rel = "" if root_mode else "wiki/"
     block_file = project_root / ("CLAUDE.md" if cfg.target == "claude" else "AGENTS.md")
-    upsert_block(block_file, render_block(cfg.target, wiki_rel))
+    upsert_block(block_file, render_block(cfg.target, wiki_rel, cfg.wiki_update_mode))
 
     # Refresh hooks only if they were already installed.
     hooks_refreshed = False
