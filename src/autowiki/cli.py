@@ -5,11 +5,21 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
+import click
 import typer
 
 from . import __version__
 from .catalog import index_is_current, write_index
-from .config import SCHEMA_VERSION, WikiConfig, find_wiki_root, load_config
+from .config import (
+    ALONGSIDE_PR,
+    AFTER_MERGE,
+    CONFIG_NAME,
+    SCHEMA_VERSION,
+    WikiConfig,
+    find_wiki_root,
+    load_config,
+    normalize_wiki_update_mode,
+)
 from . import embeddings
 from . import graph as graphlib
 from . import vectorindex
@@ -60,13 +70,64 @@ def init(
     hooks: bool = typer.Option(
         False, "--hooks", help="Install opt-in Claude hygiene hooks (any target)."
     ),
+    wiki_update_mode: str = typer.Option(
+        None,
+        "--wiki-update-mode",
+        help="alongside-pr|after-merge",
+    ),
 ) -> None:
     """Initialize an LLM wiki in PATH (new or existing project)."""
+    try:
+        selected_mode = _resolve_wiki_update_mode(
+            path,
+            root_mode=root,
+            requested=wiki_update_mode,
+            assume_yes=yes,
+        )
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2)
     resolved = resolve_target(path, target, yes)
     cfg, action = init_wiki(
-        path, target=resolved, root_mode=root, force=force, with_hooks=hooks
+        path,
+        target=resolved,
+        root_mode=root,
+        force=force,
+        with_hooks=hooks,
+        wiki_update_mode=selected_mode,
     )
-    typer.echo(f"Wiki {action} at {cfg.root} (target: {cfg.target})")
+    typer.echo(
+        f"Wiki {action} at {cfg.root} "
+        f"(target: {cfg.target}, wiki updates: {cfg.wiki_update_mode})"
+    )
+
+
+def _resolve_wiki_update_mode(
+    project_root: Path,
+    *,
+    root_mode: bool,
+    requested: str | None,
+    assume_yes: bool,
+) -> str | None:
+    """Resolve init's optional update mode without surprising existing installs."""
+    if requested is not None:
+        return normalize_wiki_update_mode(requested)
+
+    project_root = Path(project_root).resolve()
+    wiki_root = project_root if root_mode else project_root / "wiki"
+    if (wiki_root / CONFIG_NAME).is_file():
+        return None
+    if assume_yes:
+        return ALONGSIDE_PR
+
+    choice = typer.prompt(
+        "How should agents handle wiki updates?\n"
+        "  1. Alongside code PRs (recommended)\n"
+        "  2. Separately after code PRs merge",
+        default="1",
+        type=click.Choice(["1", "2"]),
+    )
+    return ALONGSIDE_PR if choice == "1" else AFTER_MERGE
 
 
 def _resolve_cfg(path: Path) -> WikiConfig:

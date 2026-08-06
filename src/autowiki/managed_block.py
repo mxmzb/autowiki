@@ -3,15 +3,35 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from .config import ALONGSIDE_PR, normalize_wiki_update_mode
+
 BEGIN = "<!-- BEGIN autowiki (managed) -->"
 END = "<!-- END autowiki (managed) -->"
 
 _PATTERN = re.compile(re.escape(BEGIN) + r".*?" + re.escape(END) + r"\n?", re.DOTALL)
 
 
-def render_block(target: str, wiki_rel: str) -> str:
+def render_block(target: str, wiki_rel: str, wiki_update_mode: str) -> str:
     """Render the managed block. `wiki_rel` is "" (root mode) or "wiki/"."""
     schema_ref = f"@{wiki_rel}SCHEMA.md" if target == "claude" else f"`{wiki_rel}SCHEMA.md`"
+    mode = normalize_wiki_update_mode(wiki_update_mode)
+    if mode == ALONGSIDE_PR:
+        publishing_workflow = """Don't modify the wiki unprompted — act on it only when asked (/wiki-ingest,
+/wiki-query, /wiki-lint). When substantial work is ready to publish, ask whether
+to include a wiki ingest immediately before creating the PR, unless the user has
+already said to include or skip it. If accepted, create a draft PR to obtain its
+stable URL, run /wiki-ingest, commit and push the wiki changes to the same branch,
+then mark the PR ready and continue the normal review/merge flow. If declined,
+publish normally. If ingestion fails, leave the PR as a draft until the failure is
+resolved or the user explicitly chooses to skip it.
+Do not suggest a separate wiki ingest after the PR or branch is merged."""
+    else:
+        publishing_workflow = """Don't modify the wiki unprompted — act on it only when asked (/wiki-ingest,
+/wiki-query, /wiki-lint). BUT lean proactive about *suggesting* it: whenever
+substantial work takes shape — a PR opened, a PR or feature branch merged (to main
+or locally), or a meaningful unit of work finished — offer a /wiki-ingest so the
+change is captured. Always suggest on a merge; suggest on a PR open too. The user
+decides whether to run it."""
     body = f"""## LLM Wiki
 This project maintains an LLM wiki under `{wiki_rel or "./"}` via the `autowiki` CLI.
 Full maintainer rules: {schema_ref}
@@ -23,12 +43,7 @@ Invariants — do not violate:
 - Before creating a page, `autowiki search` first — update an existing page rather than duplicate.
 - After any wiki change, run `autowiki lint` (then `autowiki index`).
 
-Don't modify the wiki unprompted — act on it only when asked (/wiki-ingest,
-/wiki-query, /wiki-lint). BUT lean proactive about *suggesting* it: whenever
-substantial work takes shape — a PR opened, a PR or feature branch merged (to main
-or locally), or a meaningful unit of work finished — offer a /wiki-ingest so the
-change is captured. Always suggest on a merge; suggest on a PR open too. The user
-decides whether to run it.
+{publishing_workflow}
 See {schema_ref} for the full ingest/query/lint workflows."""
     return f"{BEGIN}\n{body}\n{END}\n"
 

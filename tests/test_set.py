@@ -59,7 +59,7 @@ def test_set_evergreen_flag(wiki_cfg: WikiConfig):
 def test_cli_set_command(tmp_path):
     proj = tmp_path / "proj"
     proj.mkdir()
-    runner.invoke(app, ["init", str(proj), "--target", "generic"])
+    runner.invoke(app, ["init", str(proj), "--target", "generic", "--yes"])
     wiki = proj / "wiki"
     runner.invoke(app, ["new-page", "A", "--type", "concept", "--wiki", str(wiki)])
     r = runner.invoke(app, ["set", "a", "--confidence", "0.9", "--tier", "procedural", "--wiki", str(wiki)])
@@ -72,7 +72,7 @@ def test_cli_set_command(tmp_path):
 def test_cli_set_rejects_invalid(tmp_path):
     proj = tmp_path / "proj"
     proj.mkdir()
-    runner.invoke(app, ["init", str(proj), "--target", "generic"])
+    runner.invoke(app, ["init", str(proj), "--target", "generic", "--yes"])
     wiki = proj / "wiki"
     runner.invoke(app, ["new-page", "A", "--type", "concept", "--wiki", str(wiki)])
     r = runner.invoke(app, ["set", "a", "--tier", "bogus", "--wiki", str(wiki)])

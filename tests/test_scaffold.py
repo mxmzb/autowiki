@@ -36,6 +36,27 @@ def test_init_stores_target_in_config(project: Path):
     assert load_config(project / "wiki").target == "generic"
 
 
+def test_init_defaults_to_alongside_pr(project: Path):
+    cfg, _ = init_wiki(project, target="generic")
+    assert cfg.wiki_update_mode == "alongside_pr"
+    assert "create a draft PR" in (project / "AGENTS.md").read_text()
+
+
+def test_reinit_preserves_wiki_update_mode(project: Path):
+    init_wiki(project, target="generic", wiki_update_mode="after_merge")
+    cfg, _ = init_wiki(project, target="generic")
+    assert cfg.wiki_update_mode == "after_merge"
+    assert "Always suggest on a merge" in (project / "AGENTS.md").read_text()
+
+
+def test_reinit_can_change_wiki_update_mode(project: Path):
+    init_wiki(project, target="generic", wiki_update_mode="after_merge")
+    cfg, _ = init_wiki(project, target="generic", wiki_update_mode="alongside-pr")
+    assert cfg.wiki_update_mode == "alongside_pr"
+    assert load_config(project / "wiki").wiki_update_mode == "alongside_pr"
+    assert "create a draft PR" in (project / "AGENTS.md").read_text()
+
+
 def test_init_root_mode_places_files_at_root(project: Path):
     init_wiki(project, target="generic", root_mode=True)
     assert (project / CONFIG_NAME).exists()

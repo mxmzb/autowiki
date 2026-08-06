@@ -12,7 +12,9 @@ runner = CliRunner()
 def test_init_with_hooks_installs(tmp_path: Path):
     proj = tmp_path / "p"
     proj.mkdir()
-    r = runner.invoke(app, ["init", str(proj), "--target", "claude", "--hooks"])
+    r = runner.invoke(
+        app, ["init", str(proj), "--target", "claude", "--hooks", "--yes"]
+    )
     assert r.exit_code == 0
     assert (proj / ".claude" / "settings.json").exists()
     assert hooks_installed(proj)
@@ -21,7 +23,7 @@ def test_init_with_hooks_installs(tmp_path: Path):
 def test_hook_pre_edit_blocks_protected(tmp_path: Path):
     proj = tmp_path / "p"
     proj.mkdir()
-    runner.invoke(app, ["init", str(proj), "--target", "generic"])
+    runner.invoke(app, ["init", str(proj), "--target", "generic", "--yes"])
     wiki = proj / "wiki"
     payload = json.dumps({"tool_input": {"file_path": str(wiki / "index.md")}})
     r = runner.invoke(app, ["hook", "pre-edit"], input=payload)
@@ -31,7 +33,7 @@ def test_hook_pre_edit_blocks_protected(tmp_path: Path):
 def test_install_then_uninstall_hooks(tmp_path: Path):
     proj = tmp_path / "p"
     proj.mkdir()
-    runner.invoke(app, ["init", str(proj), "--target", "claude"])
+    runner.invoke(app, ["init", str(proj), "--target", "claude", "--yes"])
     wiki = proj / "wiki"
     assert runner.invoke(app, ["install-hooks", "--wiki", str(wiki)]).exit_code == 0
     assert hooks_installed(proj)

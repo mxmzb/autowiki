@@ -21,6 +21,38 @@ def test_upgrade_preserves_config_customizations(wiki_cfg: WikiConfig):
     assert reloaded.schema_version == SCHEMA_VERSION
 
 
+def test_upgrade_migrates_legacy_mode_to_explicit_after_merge(wiki_cfg: WikiConfig):
+    config_text = wiki_cfg.config_file.read_text()
+    wiki_cfg.config_file.write_text(
+        "\n".join(
+            line
+            for line in config_text.splitlines()
+            if not line.startswith("wiki_update_mode =")
+        )
+        + "\n"
+    )
+    legacy_cfg = load_config(wiki_cfg.root)
+    assert legacy_cfg.wiki_update_mode == "after_merge"
+
+    upgrade(legacy_cfg)
+
+    assert load_config(wiki_cfg.root).wiki_update_mode == "after_merge"
+    assert 'wiki_update_mode = "after_merge"' in wiki_cfg.config_file.read_text()
+    assert "Always suggest on a merge" in (wiki_cfg.root.parent / "AGENTS.md").read_text()
+
+
+def test_upgrade_preserves_alongside_pr_mode(wiki_cfg: WikiConfig):
+    wiki_cfg.wiki_update_mode = "alongside_pr"
+    write_config(wiki_cfg)
+
+    upgrade(wiki_cfg)
+
+    assert load_config(wiki_cfg.root).wiki_update_mode == "alongside_pr"
+    block = (wiki_cfg.root.parent / "AGENTS.md").read_text()
+    assert "create a draft PR" in block
+    assert "Always suggest on a merge" not in block
+
+
 def test_upgrade_does_not_touch_content(wiki_cfg: WikiConfig):
     p = new_page(wiki_cfg, type="note", title="Keep Me", summary="body matters")
     (wiki_cfg.inbox_dir / "raw.txt").write_text("RAW")

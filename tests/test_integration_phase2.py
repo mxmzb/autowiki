@@ -16,7 +16,7 @@ def _run(args):
 def test_phase2_graph_lifecycle(tmp_path: Path):
     proj = tmp_path / "proj"
     proj.mkdir()
-    assert _run(["init", str(proj), "--target", "generic"]).exit_code == 0
+    assert _run(["init", str(proj), "--target", "generic", "--yes"]).exit_code == 0
     wiki = proj / "wiki"
 
     assert _run(["new-page", "PyTorch", "--type", "entity", "--summary", "an ML framework",
