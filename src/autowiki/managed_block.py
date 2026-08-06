@@ -23,8 +23,8 @@ already said to include or skip it. If accepted, create a draft PR to obtain its
 stable URL, run /wiki-ingest, commit and push the wiki changes to the same branch,
 then mark the PR ready and continue the normal review/merge flow. If declined,
 publish normally. If ingestion fails, leave the PR as a draft until the failure is
-resolved or the user explicitly chooses to skip it. Do not suggest a separate wiki ingest
-after the PR or branch is merged."""
+resolved or the user explicitly chooses to skip it.
+Do not suggest a separate wiki ingest after the PR or branch is merged."""
     else:
         publishing_workflow = """Don't modify the wiki unprompted — act on it only when asked (/wiki-ingest,
 /wiki-query, /wiki-lint). BUT lean proactive about *suggesting* it: whenever

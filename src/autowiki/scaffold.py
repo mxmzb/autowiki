@@ -127,13 +127,12 @@ def init_wiki(
     _touch(wiki_root / "inbox" / ".gitkeep")
     _touch(wiki_root / "pages" / ".gitkeep")
 
-    selected_mode = (
-        cfgmod.normalize_wiki_update_mode(wiki_update_mode)
-        if wiki_update_mode is not None
-        else existing_cfg.wiki_update_mode
-        if existing_cfg is not None
-        else cfgmod.ALONGSIDE_PR
-    )
+    if wiki_update_mode is not None:
+        selected_mode = cfgmod.normalize_wiki_update_mode(wiki_update_mode)
+    elif existing_cfg is not None:
+        selected_mode = existing_cfg.wiki_update_mode
+    else:
+        selected_mode = cfgmod.ALONGSIDE_PR
     cfg = WikiConfig(
         root=wiki_root,
         target=target,
