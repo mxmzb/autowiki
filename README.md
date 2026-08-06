@@ -37,6 +37,7 @@ environment — after a **dependency change** (e.g. a new package), re-run
 autowiki init . --target claude      # scaffold wiki/ + CLAUDE.md managed block + slash commands
                                      #   --target generic for AGENTS.md; --root for a wiki at repo root
                                      #   --hooks to install opt-in Claude hygiene hooks
+                                     #   asks whether wiki updates travel with code PRs or follow merges
 autowiki add-source notes.md         # vendor an existing file/URL into wiki/inbox/  → prints a source id
 autowiki new-source "Meeting Notes"  # create a fresh inbox source (empty, or pipe content in)
 autowiki new-page "Topic" --type concept --summary "…" --sources <id>
@@ -55,6 +56,11 @@ autowiki status                      # page counts, status/tier breakdown, revie
 autowiki doctor                      # health/setup check
 autowiki upgrade                     # refresh schema/commands/block to the installed version
 ```
+
+For scripted installs, use `--yes` to accept the recommended `alongside_pr` workflow, or choose
+explicitly with `--wiki-update-mode alongside-pr|after-merge`. Re-running `init` preserves the saved
+choice unless that option is supplied. Existing installations without the setting retain the legacy
+`after_merge` workflow when upgraded.
 
 With `--hooks`, a SessionStart hook greets each Claude session with what needs attention (pending
 sources, pages due for review, lint errors) so the in-session agent can act on it.
