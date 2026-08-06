@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from autowiki.config import (
     CONFIG_NAME,
     WikiConfig,
@@ -7,6 +9,30 @@ from autowiki.config import (
     load_config,
     write_config,
 )
+
+
+def test_new_config_defaults_to_alongside_pr(tmp_path: Path):
+    assert WikiConfig(root=tmp_path / "wiki").wiki_update_mode == "alongside_pr"
+
+
+def test_legacy_config_without_mode_loads_as_after_merge(tmp_path: Path):
+    wiki = tmp_path / "wiki"
+    wiki.mkdir()
+    (wiki / CONFIG_NAME).write_text("[wiki]\nschema_version = 1\n")
+    assert load_config(wiki).wiki_update_mode == "after_merge"
+
+
+def test_wiki_update_mode_round_trip(tmp_path: Path):
+    wiki = tmp_path / "wiki"
+    wiki.mkdir()
+    write_config(WikiConfig(root=wiki, wiki_update_mode="after-merge"))
+    assert load_config(wiki).wiki_update_mode == "after_merge"
+    assert 'wiki_update_mode = "after_merge"' in (wiki / CONFIG_NAME).read_text()
+
+
+def test_invalid_wiki_update_mode_fails_loudly(tmp_path: Path):
+    with pytest.raises(ValueError, match="alongside_pr.*after_merge"):
+        WikiConfig(root=tmp_path / "wiki", wiki_update_mode="sometimes")
 
 
 def test_find_wiki_root_walks_up(tmp_path: Path):

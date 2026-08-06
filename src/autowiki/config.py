@@ -8,6 +8,17 @@ from .frontmatter import PAGE_TYPES
 
 CONFIG_NAME = ".autowiki.toml"
 SCHEMA_VERSION = 1
+ALONGSIDE_PR = "alongside_pr"
+AFTER_MERGE = "after_merge"
+WIKI_UPDATE_MODES = (ALONGSIDE_PR, AFTER_MERGE)
+
+
+def normalize_wiki_update_mode(value: str) -> str:
+    normalized = value.strip().lower().replace("-", "_")
+    if normalized not in WIKI_UPDATE_MODES:
+        accepted = ", ".join(WIKI_UPDATE_MODES)
+        raise ValueError(f"wiki_update_mode must be one of: {accepted}")
+    return normalized
 
 
 @dataclass
@@ -15,10 +26,14 @@ class WikiConfig:
     root: Path  # dir containing pages/, inbox/, index.md, log.md, SCHEMA.md
     schema_version: int = SCHEMA_VERSION
     target: str = "claude"  # "claude" | "generic"
+    wiki_update_mode: str = ALONGSIDE_PR
     embedding_provider: str = "local"
     stale_days: int = 365
     extra_types: list[str] = field(default_factory=list)
     root_layout: bool = False  # True when the wiki lives at the project root (--root)
+
+    def __post_init__(self) -> None:
+        self.wiki_update_mode = normalize_wiki_update_mode(self.wiki_update_mode)
 
     @property
     def allowed_types(self) -> tuple[str, ...]:
@@ -77,6 +92,7 @@ def load_config(root: Path) -> WikiConfig:
         root=root,
         schema_version=wiki.get("schema_version", SCHEMA_VERSION),
         target=wiki.get("target", "claude"),
+        wiki_update_mode=wiki.get("wiki_update_mode", AFTER_MERGE),
         embedding_provider=wiki.get("embedding_provider", "local"),
         stale_days=wiki.get("stale_days", 365),
         extra_types=list(wiki.get("extra_types", [])),
@@ -90,6 +106,7 @@ def dump_config(cfg: WikiConfig) -> str:
         "[wiki]\n"
         f"schema_version = {cfg.schema_version}\n"
         f'target = "{cfg.target}"\n'
+        f'wiki_update_mode = "{cfg.wiki_update_mode}"\n'
         f'embedding_provider = "{cfg.embedding_provider}"\n'
         f"stale_days = {cfg.stale_days}\n"
         f"extra_types = [{extra}]\n"
