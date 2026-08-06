@@ -1,0 +1,8 @@
+[wiki]
+schema_version = 1
+target = "generic"
+wiki_update_mode = "alongside_pr"
+embedding_provider = "local"
+stale_days = 365
+extra_types = []
+root_layout = false
