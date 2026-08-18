@@ -86,5 +86,10 @@ wiki/
 
 `index.md` and `log.md` are generated — let `autowiki` manage them. `inbox/` is read-only to the agent.
 
+**Your own frontmatter is safe.** Add whatever keys your project needs to a page — `autowiki`
+ignores keys it does not define, but preserves them verbatim through every write path
+(`set`, `supersede`, `lint --fix`, `upgrade`). Known fields are emitted first, then yours in
+their original order. Document what they mean in `SCHEMA.md`.
+
 It's all plain markdown with `[[slug]]` wiki-links, so it looks great in [Obsidian](https://obsidian.md) —
 open the `wiki/` folder as a vault and you get live backlinks and the graph view over your pages for free.

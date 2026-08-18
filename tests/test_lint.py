@@ -142,3 +142,21 @@ def test_wikilink_in_fenced_code_is_not_a_link(wiki_cfg: WikiConfig):
     fenced = "\n```ts\n// see [[some-route]] in app/[[...slug]]/page.tsx\n```\n"
     p.write_text(dump(fm, body + fenced))
     assert not any(i.code == "broken_link" for i in run_lint(wiki_cfg))
+
+
+def test_fix_preserves_unknown_frontmatter_across_every_page(wiki_cfg: WikiConfig):
+    """`lint --fix` rewrites the whole wiki in one command, so a dropped unknown key
+    is lost everywhere at once. Every page must keep its own frontmatter."""
+    for title in ("A", "B", "C"):
+        new_page(wiki_cfg, type="concept", title=title, summary="s")
+    watched = []
+    for slug in ("a", "b", "c"):
+        page = wiki_cfg.pages_dir / f"{slug}.md"
+        page.write_text(
+            page.read_text().replace("\ntype:", f"\nwatch:\n- lib/{slug}.sh\ntype:", 1)
+        )
+        watched.append(page)
+
+    fix(wiki_cfg)
+
+    assert [p.read_text().count(f"- lib/{p.stem}.sh") for p in watched] == [1, 1, 1]
