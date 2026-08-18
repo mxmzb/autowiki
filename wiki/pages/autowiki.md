@@ -2,7 +2,7 @@
 title: autowiki
 type: entity
 created: '2026-08-06'
-updated: '2026-08-06'
+updated: '2026-08-18'
 slug: autowiki
 summary: A deterministic CLI for initializing and maintaining agent-authored project
   wikis.
@@ -15,6 +15,8 @@ sources:
 related:
 - wiki-update-modes
 - pr-1-configurable-wiki-update-timing
+- page-frontmatter
+- pr-4-preserve-unknown-frontmatter
 status: active
 confidence: 1.0
 review_by: null
@@ -43,13 +45,18 @@ managed agent instructions—while an LLM does the reading and writing.
   configuration during initialization and upgrades.
 - `index.md` and `log.md` are generated, and inbox sources are added only through
   the CLI.
+- A wiki may extend the [[page-frontmatter|page schema]] with its own keys; the
+  CLI ignores them but preserves them through every write.
 
 ## Relationships
 
 - Implements [[wiki-update-modes]].
 - Pull request [[pr-1-configurable-wiki-update-timing]] introduced the persisted
   mode and mode-specific managed instructions.
+- Pull request [[pr-4-preserve-unknown-frontmatter]] established the
+  unknown-key guarantee in [[page-frontmatter]].
 
 ## References
 
 - Source `1`: pull request #1, “Add configurable wiki update timing.”
+- Source `4`: pull request #4, “Preserve frontmatter keys the schema does not define.”
