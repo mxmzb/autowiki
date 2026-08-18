@@ -77,3 +77,17 @@ def test_cli_set_rejects_invalid(tmp_path):
     runner.invoke(app, ["new-page", "A", "--type", "concept", "--wiki", str(wiki)])
     r = runner.invoke(app, ["set", "a", "--tier", "bogus", "--wiki", str(wiki)])
     assert r.exit_code == 1
+
+
+def test_set_preserves_unknown_frontmatter(wiki_cfg: WikiConfig):
+    """A wiki that adds its own frontmatter key keeps it across a `set`.
+    Arranged by hand-editing the file, the way a downstream wiki actually adds one."""
+    new_page(wiki_cfg, type="concept", title="A")
+    p = wiki_cfg.pages_dir / "a.md"
+    p.write_text(p.read_text().replace("\ntype:", "\nwatch:\n- core/app/doctor.ts\ntype:", 1))
+    assert "watch:" in p.read_text()
+
+    set_page_fields(wiki_cfg, "a", confidence=0.8)
+
+    assert _reload(wiki_cfg, "a").confidence == 0.8
+    assert "- core/app/doctor.ts" in p.read_text()

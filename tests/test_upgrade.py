@@ -88,3 +88,16 @@ def test_upgrade_ensures_index_is_gitignored(wiki_cfg: WikiConfig):
     gi.write_text("")
     upgrade(wiki_cfg)
     assert ".index/" in gi.read_text()
+
+
+def test_upgrade_preserves_unknown_frontmatter(wiki_cfg: WikiConfig):
+    """`upgrade` re-dumps every page. A wiki's own frontmatter keys must survive it."""
+    new_page(wiki_cfg, type="concept", title="A")
+    page = wiki_cfg.pages_dir / "a.md"
+    page.write_text(
+        page.read_text().replace("\ntype:", "\nwatch:\n- core/app/doctor.ts\ntype:", 1)
+    )
+
+    upgrade(wiki_cfg)
+
+    assert "- core/app/doctor.ts" in page.read_text()
