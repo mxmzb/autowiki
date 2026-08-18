@@ -90,4 +90,7 @@ This file is yours to edit. To adapt the wiki to your use case:
 - **Add a page type:** describe it here under "Page types", add it to `[wiki].extra_types` in
   `.autowiki.toml`, and use `autowiki new-page --type <yourtype>`.
 - **Change the stale threshold:** set `stale_days` in `.autowiki.toml`.
+- **Add your own frontmatter:** any key this schema does not define is kept verbatim across
+  `set`, `upgrade`, and every other read/write. Document it here so the next maintainer knows
+  what it means — the CLI ignores it but will never drop it.
 - **Change conventions:** edit the rules above; the CLI enforces structure, this file guides judgement.

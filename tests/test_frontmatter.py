@@ -119,3 +119,14 @@ def test_evergreen_defaults_false_and_coerces_to_bool():
     )
     parsed, _ = parse(text)
     assert parsed.evergreen is True
+
+
+def test_round_trip_preserves_unknown_fields():
+    """A downstream wiki may add its own frontmatter keys (SCHEMA.md invites it).
+    Re-dumping a page must not silently drop them."""
+    text = (
+        "---\ntitle: X\ntype: note\ncreated: '2026-01-01'\nupdated: '2026-01-01'\n"
+        "watch:\n- core/app/doctor.ts\n---\nbody\n"
+    )
+    fm, body = parse(text)
+    assert "watch:" in dump(fm, body)

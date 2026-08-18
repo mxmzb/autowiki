@@ -37,9 +37,15 @@ class PageFrontmatter:
     evergreen: bool = False  # exempt from decay (timeless content)
     entities: list[dict] = field(default_factory=list)
     relations: list[dict] = field(default_factory=list)
+    # Keys this schema does not define, kept verbatim so a wiki that adds its own
+    # frontmatter (SCHEMA.md invites it) survives `set`, `upgrade`, and any other
+    # parse/dump round trip. Written back after the known fields.
+    extra: dict = field(default_factory=dict)
 
 
 _FIELDS = {f.name for f in dataclasses.fields(PageFrontmatter)}
+# `extra` is the carrier for unknown keys, never itself read from a page.
+_KNOWN_KEYS = _FIELDS - {"extra"}
 
 # Field-shape groups used to coerce hand-edited frontmatter into safe types so
 # downstream consumers (lint/index/search) never crash on a malformed page.
@@ -101,12 +107,15 @@ def parse(text: str) -> tuple[PageFrontmatter, str]:
         raise ValueError("page is missing YAML frontmatter")
     _, fm_block, body = text.split(FM_DELIM, 2)
     data = yaml.safe_load(fm_block) or {}
-    known = {k: v for k, v in data.items() if k in _FIELDS}
-    return PageFrontmatter(**_coerce_shapes(known)), body.lstrip("\n")
+    known = {k: v for k, v in data.items() if k in _KNOWN_KEYS}
+    extra = {k: v for k, v in data.items() if k not in _KNOWN_KEYS}
+    return PageFrontmatter(**_coerce_shapes(known), extra=extra), body.lstrip("\n")
 
 
 def dump(fm: PageFrontmatter, body: str) -> str:
-    fm_yaml = yaml.safe_dump(asdict(fm), sort_keys=False, allow_unicode=True).strip()
+    data = asdict(fm)
+    data.update(data.pop("extra", {}) or {})
+    fm_yaml = yaml.safe_dump(data, sort_keys=False, allow_unicode=True).strip()
     return f"{FM_DELIM}\n{fm_yaml}\n{FM_DELIM}\n\n{body.rstrip()}\n"
 
 

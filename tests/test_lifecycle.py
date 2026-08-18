@@ -95,3 +95,19 @@ def test_supersede_self_raises(wiki_cfg: WikiConfig):
 
     with pytest.raises(ValueError):
         supersede(wiki_cfg, "a", "a")
+
+
+def test_supersede_preserves_unknown_frontmatter_on_both_pages(wiki_cfg: WikiConfig):
+    """`supersede` rewrites the old page and the new one; neither may lose its own keys."""
+    new_page(wiki_cfg, type="concept", title="Old")
+    new_page(wiki_cfg, type="concept", title="New")
+    for slug in ("old", "new"):
+        page = wiki_cfg.pages_dir / f"{slug}.md"
+        page.write_text(
+            page.read_text().replace("\ntype:", f"\nwatch:\n- lib/{slug}.sh\ntype:", 1)
+        )
+
+    supersede(wiki_cfg, "old", "new")
+
+    assert "- lib/old.sh" in (wiki_cfg.pages_dir / "old.md").read_text()
+    assert "- lib/new.sh" in (wiki_cfg.pages_dir / "new.md").read_text()
